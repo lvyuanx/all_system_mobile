@@ -1,0 +1,685 @@
+/* 主题 CSS 变量 */
+:root {
+  --color-primary: #1989fa;
+  --color-success: #07c160;
+  --color-warning: #ff976a;
+  --color-danger: #ee0a24;
+  --color-info: #909399;
+
+  --color-background: #f7f8fa;
+  --color-card: #ffffff;
+  --color-overlay: rgba(0, 0, 0, 0.7);
+
+  --color-text: #323233;
+  --color-text-light: #969799;
+  --color-text-dark: #000000;
+
+  --color-border: #ebedf0;
+
+  --color-input-bg: #f7f8fa;
+  --color-placeholder: #c8c9cc;
+
+  --color-shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* 全局样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Segoe UI,
+    Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f0f2f5;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 移动端模拟容器 */
+.mobile-container {
+  position: relative;
+  max-width: 430px; /* iPhone Pro Max 宽度 */
+  height: 100dvh;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: var(--color-card);
+  box-shadow: 0 0 20px var(--color-shadow);
+  overflow: hidden;
+}
+
+/* 确保固定定位的组件不参与页面动画 */
+.mobile-container .van-nav-bar,
+.mobile-container .van-tabbar {
+  position: fixed !important;
+  z-index: 1000;
+}
+
+/* 应用主题色到 Vant 组件 */
+.mobile-container .van-button--primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.mobile-container .van-button--danger {
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.mobile-container .van-button--warning {
+  background-color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.mobile-container .van-tag--primary {
+  background-color: var(--color-primary);
+}
+
+.mobile-container .van-tag--danger {
+  background-color: var(--color-danger);
+}
+
+.mobile-container .van-tag--warning {
+  background-color: var(--color-warning);
+}
+
+.mobile-container .van-tag--success {
+  background-color: var(--color-success);
+}
+
+/* Cell 组件主题 */
+.mobile-container .van-cell {
+  background-color: var(--color-card);
+  color: var(--color-text);
+}
+
+.mobile-container .van-cell::after {
+  border-color: var(--color-border);
+}
+
+.mobile-container .van-cell--clickable:active {
+  background-color: var(--color-background);
+}
+
+/* Cell Group */
+.mobile-container .van-cell-group {
+  background-color: var(--color-background);
+}
+
+.mobile-container .van-cell-group--inset {
+  background-color: var(--color-card);
+  border-radius: 8px;
+}
+
+/* Card 组件 */
+.mobile-container .van-card {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-card__title {
+  color: var(--color-text);
+}
+
+.mobile-container .van-card__desc {
+  color: var(--color-text-light);
+}
+
+/* Toast */
+.mobile-container .van-toast {
+  background-color: var(--color-overlay);
+  color: #fff;
+}
+
+/* Dialog */
+.mobile-container .van-dialog {
+  background-color: var(--color-card);
+  color: var(--color-text);
+}
+
+.mobile-container .van-dialog__header {
+  color: var(--color-text);
+}
+
+.mobile-container .van-dialog__message {
+  color: var(--color-text-light);
+}
+
+/* Popup */
+.mobile-container .van-popup {
+  background-color: var(--color-card);
+}
+
+/* Picker */
+.mobile-container .van-picker {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-picker__title {
+  color: var(--color-text);
+}
+
+.mobile-container .van-picker__confirm {
+  color: var(--color-primary);
+}
+
+.mobile-container .van-picker__cancel {
+  color: var(--color-text-light);
+}
+
+/* Sidebar */
+.mobile-container .van-sidebar {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-sidebar-item {
+  color: var(--color-text);
+}
+
+.mobile-container .van-sidebar-item--selected {
+  color: var(--color-primary);
+  background-color: var(--color-background);
+}
+
+/* Notice Bar */
+.mobile-container .van-notice-bar {
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+/* Empty */
+.mobile-container .van-empty__description {
+  color: var(--color-text-light);
+}
+
+/* Image Preview */
+.mobile-container .van-image-preview__index {
+  color: var(--color-text);
+  background-color: var(--color-overlay);
+}
+
+/* Swipe / 轮播图 */
+.mobile-container .van-swipe__indicators {
+  bottom: 10px;
+}
+
+.mobile-container .van-swipe__indicator {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.mobile-container .van-swipe__indicator--active {
+  background-color: var(--color-primary);
+}
+
+/* Grid / 宫格 */
+.mobile-container .van-grid-item__content {
+  background-color: var(--color-card);
+  color: var(--color-text);
+}
+
+.mobile-container .van-grid-item__icon {
+  color: var(--color-primary);
+}
+
+.mobile-container .van-grid-item__text {
+  color: var(--color-text);
+}
+
+/* Pull Refresh / 下拉刷新 */
+.mobile-container .van-pull-refresh {
+  color: var(--color-text);
+}
+
+.mobile-container .van-pull-refresh__track {
+  background-color: var(--color-background);
+}
+
+/* List / 列表 */
+.mobile-container .van-list__finished-text,
+.mobile-container .van-list__loading-text {
+  color: var(--color-text-light);
+}
+
+/* ActionSheet / 动作面板 */
+.mobile-container .van-action-sheet {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-action-sheet__item {
+  color: var(--color-text);
+}
+
+.mobile-container .van-action-sheet__item--disabled {
+  color: var(--color-text-light);
+}
+
+.mobile-container .van-action-sheet__cancel {
+  color: var(--color-text);
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-action-sheet__description {
+  color: var(--color-text-light);
+}
+
+/* DropdownMenu / 下拉菜单 */
+.mobile-container .van-dropdown-menu {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-dropdown-menu__title {
+  color: var(--color-text);
+}
+
+.mobile-container .van-dropdown-menu__bar {
+  background-color: var(--color-card);
+  box-shadow: 0 1px 0 var(--color-border);
+}
+
+.mobile-container .van-dropdown-item__option {
+  color: var(--color-text);
+}
+
+.mobile-container .van-dropdown-item__option--active {
+  color: var(--color-primary);
+  background-color: var(--color-background);
+}
+
+/* Tabs / 标签页 */
+.mobile-container .van-tabs__nav {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-tab {
+  color: var(--color-text-light);
+}
+
+.mobile-container .van-tab--active {
+  color: var(--color-primary);
+}
+
+.mobile-container .van-tabs__line {
+  background-color: var(--color-primary);
+}
+
+/* Collapse / 折叠面板 */
+.mobile-container .van-collapse-item {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-collapse-item__title {
+  color: var(--color-text);
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-collapse-item__content {
+  color: var(--color-text-light);
+  background-color: var(--color-card);
+}
+
+/* Steps / 步骤条 */
+.mobile-container .van-steps__circle {
+  background-color: var(--color-background);
+}
+
+.mobile-container .van-step__circle {
+  background-color: var(--color-background);
+}
+
+.mobile-container .van-step__title {
+  color: var(--color-text);
+}
+
+.mobile-container .van-step__circle-container {
+  background-color: var(--color-background);
+}
+
+/* RadioGroup / 单选框组 */
+.mobile-container .van-radio__label {
+  color: var(--color-text);
+}
+
+.mobile-container .van-radio-group--horizontal {
+  background-color: var(--color-card);
+}
+
+/* Checkbox / 复选框 */
+.mobile-container .van-checkbox__label {
+  color: var(--color-text);
+}
+
+/* Form / 表单 */
+.mobile-container .van-field__label {
+  color: var(--color-text);
+}
+
+.mobile-container .van-field__control {
+  color: var(--color-text);
+}
+
+.mobile-container .van-field__control::placeholder {
+  color: var(--color-placeholder);
+}
+
+.mobile-container .van-field__error-message {
+  color: var(--color-danger);
+}
+
+/* Search / 搜索框 */
+.mobile-container .van-search {
+  background-color: var(--color-background);
+}
+
+.mobile-container .van-search__content {
+  background-color: var(--color-input-bg);
+}
+
+.mobile-container .van-search__field {
+  color: var(--color-text);
+}
+
+.mobile-container .van-search__field::placeholder {
+  color: var(--color-placeholder);
+}
+
+/* Progress / 进度条 */
+.mobile-container .van-progress__portion {
+  background-color: var(--color-primary);
+}
+
+.mobile-container .van-progress__pivot {
+  color: var(--color-text);
+  background-color: var(--color-card);
+}
+
+/* Rate / 评分 */
+.mobile-container .van-rate__icon {
+  color: var(--color-text-light);
+}
+
+.mobile-container .van-rate__icon--full {
+  color: var(--color-primary);
+}
+
+/* Skeleton / 骨架屏 */
+.mobile-container .van-skeleton__row {
+  background-color: var(--color-background);
+}
+
+.mobile-container .van-skeleton-paragraph {
+  background-color: var(--color-background);
+}
+
+/* Switch / 开关 */
+.mobile-container .van-switch {
+  background-color: var(--color-border);
+}
+
+.mobile-container .van-switch--on {
+  background-color: var(--color-primary);
+}
+
+/* Slider / 滑块 */
+.mobile-container .van-slider__bar {
+  background-color: var(--color-primary);
+}
+
+.mobile-container .van-slider__button {
+  background-color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+/* Uploader / 上传 */
+.mobile-container .van-uploader__upload {
+  background-color: var(--color-background);
+}
+
+.mobile-container .van-uploader__upload-icon {
+  color: var(--color-text-light);
+}
+
+/* Loading / 加载 */
+.mobile-container .van-loading__spinner,
+.mobile-container .van-loading__text {
+  color: var(--color-primary);
+}
+
+/* Circle / 环形进度条 */
+.mobile-container .van-circle__text {
+  color: var(--color-text);
+}
+
+/* CountDown / 倒计时 */
+.mobile-container .van-count-down {
+  color: var(--color-text);
+}
+
+/* Divider / 分割线 */
+.mobile-container .van-divider {
+  color: var(--color-text-light);
+  border-color: var(--color-border);
+}
+
+/* Badge / 徽标 */
+.mobile-container .van-badge__wrapper {
+  color: var(--color-text);
+}
+
+/* Image / 图片 */
+.mobile-container .van-image__error {
+  background-color: var(--color-background);
+  color: var(--color-text-light);
+}
+
+/* Icon / 图标 */
+.mobile-container .van-icon {
+  color: var(--color-text);
+}
+
+/* TreeSelect / 分类选择 */
+.mobile-container .van-tree-select {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-tree-select__item {
+  color: var(--color-text);
+}
+
+.mobile-container .van-tree-select__item--active {
+  color: var(--color-primary);
+  background-color: var(--color-background);
+}
+
+/* IndexBar / 索引栏 */
+.mobile-container .van-index-bar__index {
+  color: var(--color-text-light);
+}
+
+/* Calendar / 日历 */
+.mobile-container .van-calendar {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-calendar__header {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-calendar__day {
+  color: var(--color-text);
+}
+
+.mobile-container .van-calendar__selected-day {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+/* DatetimePicker / 时间选择 */
+.mobile-container .van-datetime-picker {
+  background-color: var(--color-card);
+}
+
+/* TimePicker / 时间选择 */
+.mobile-container .van-time-picker {
+  background-color: var(--color-card);
+}
+
+/* CheckboxGroup / 复选框组 */
+.mobile-container .van-checkbox-group--horizontal {
+  background-color: var(--color-card);
+}
+
+/* SwipeCell / 滑动单元格 */
+.mobile-container .van-swipe-cell__right,
+.mobile-container .van-swipe-cell__left {
+  background-color: var(--color-background);
+}
+
+/* NavBar / 导航栏 */
+.mobile-container .van-nav-bar {
+  background-color: var(--color-card);
+  color: var(--color-text);
+}
+
+.mobile-container .van-nav-bar__title {
+  color: var(--color-text);
+}
+
+.mobile-container .van-nav-bar__text {
+  color: var(--color-primary);
+}
+
+.mobile-container .van-nav-bar__arrow {
+  color: var(--color-text);
+}
+
+/* Tabbar / 标签栏 */
+.mobile-container .van-tabbar {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-tabbar-item {
+  color: var(--color-text-light);
+}
+
+.mobile-container .van-tabbar-item--active {
+  color: var(--color-primary);
+}
+
+/* ActionBar / 底部操作栏 */
+.mobile-container .van-action-bar {
+  background-color: var(--color-card);
+  box-shadow: 0 -1px 0 var(--color-border);
+}
+
+/* Overlay / 遮罩层 */
+.mobile-container .van-overlay {
+  background-color: var(--color-overlay);
+}
+
+/* Picker / 选择器 */
+.mobile-container .van-picker__toolbar {
+  background-color: var(--color-card);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-container .van-picker__columns {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-picker-column {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-picker-column__item {
+  color: var(--color-text);
+}
+
+.mobile-container .van-picker-column__item--selected {
+  color: var(--color-primary);
+}
+
+.mobile-container .van-picker__mask {
+  background: linear-gradient(
+    180deg,
+    var(--color-card),
+    rgba(255, 255, 255, 0.2),
+    var(--color-card)
+  );
+}
+
+.mobile-container .van-picker__frame {
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* DatetimePicker / 日期时间选择器 */
+.mobile-container .van-datetime-picker {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-datetime-picker__toolbar {
+  background-color: var(--color-card);
+}
+
+/* TimePicker / 时间选择器 */
+.mobile-container .van-time-picker {
+  background-color: var(--color-card);
+}
+
+.mobile-container .van-time-picker__toolbar {
+  background-color: var(--color-card);
+}
+
+/* 限制固定定位组件的宽度 */
+.mobile-container .van-nav-bar,
+.mobile-container .van-tabbar,
+.mobile-container .van-action-bar,
+.mobile-container .van-overlay,
+.mobile-container .van-popup,
+.mobile-container .van-picker,
+.mobile-container .van-dialog,
+.mobile-container .van-toast {
+  max-width: 430px;
+  left: 50% !important;
+  transform: translateX(-50%);
+}
+
+/* 覆盖特定组件的样式 */
+.mobile-container .van-popup--top,
+.mobile-container .van-popup--bottom,
+.mobile-container .van-popup--left,
+.mobile-container .van-popup--right {
+  max-width: 430px;
+}
+
+/* Toast 特殊处理 */
+.mobile-container .van-toast {
+  max-width: 270px;
+}
+
+/* 在小屏幕设备上占满屏幕 */
+@media (max-width: 450px) {
+  .mobile-container,
+  .mobile-container .van-nav-bar,
+  .mobile-container .van-tabbar,
+  .mobile-container .van-action-bar,
+  .mobile-container .van-overlay,
+  .mobile-container .van-popup,
+  .mobile-container .van-picker,
+  .mobile-container .van-dialog,
+  .mobile-container .van-toast {
+    max-width: 100%;
+    left: 0 !important;
+    transform: none;
+  }
+}
