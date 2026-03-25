@@ -176,6 +176,7 @@ const onAfterEnter = () => {
   position: relative;
   z-index: 100;
   flex-shrink: 0;
+  height: calc(var(--van-tabbar-height) + env(safe-area-inset-bottom));
 }
 
 .ios-forward-enter-active,
