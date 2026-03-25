@@ -91,7 +91,7 @@ const onAfterEnter = () => {
   <div class="app-shell">
     <div class="navbar-wrapper">
       <van-nav-bar
-        v-if="route.meta.title"
+        v-if="route.meta.showNavBar !== false && route.meta.title"
         :title="route.meta.title"
         :left-arrow="showBack"
         :fixed="true"

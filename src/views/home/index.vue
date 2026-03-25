@@ -20,16 +20,6 @@ const userTools = ref([
   { key: 'account', icon: 'setting-o', text: '账号管理', path: '/profile/settings' },
   { key: 'orders', icon: 'orders-o', text: '订单总览', path: '/home/detail' },
   { key: 'records', icon: 'clock-o', text: '操作记录', path: '/home/detail' },
-  { key: 'account', icon: 'setting-o', text: '账号管理', path: '/profile/settings' },
-  { key: 'orders', icon: 'orders-o', text: '订单总览', path: '/home/detail' },
-  { key: 'records', icon: 'clock-o', text: '操作记录', path: '/home/detail' },
-  { key: 'account', icon: 'setting-o', text: '账号管理', path: '/profile/settings' },
-  { key: 'orders', icon: 'orders-o', text: '订单总览', path: '/home/detail' },
-  { key: 'records', icon: 'clock-o', text: '操作记录', path: '/home/detail' },
-  { key: 'account', icon: 'setting-o', text: '账号管理', path: '/profile/settings' },
-  { key: 'orders', icon: 'orders-o', text: '订单总览', path: '/home/detail' },
-  { key: 'records', icon: 'clock-o', text: '操作记录', path: '/home/detail' },
-  { key: 'account', icon: 'setting-o', text: '账号管理', path: '/profile/settings' },
 ])
 
 const goAction = (path) => {

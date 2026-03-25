@@ -6,6 +6,7 @@ const titleMap = {
   profile: '我的',
   detail: '详情页',
   settings: '设置',
+  login: '登录',
 }
 
 const tabbarRouteNames = new Set(['home', 'category', 'profile'])
@@ -57,6 +58,7 @@ const autoRoutes = Object.entries(viewModules)
         keepAlive: level === 1,
         showTabbar: tabbarRouteNames.has(routeKey) && level === 1,
         showBack: level > 1,
+        showNavBar: routeKey !== 'login',
         routeKey,
         parentPath,
         hierarchy: pathSegments,
@@ -70,7 +72,10 @@ const autoRoutes = Object.entries(viewModules)
     return a.path.localeCompare(b.path)
   })
 
-const defaultRoute = autoRoutes.find((route) => route.meta.level === 1)?.path || '/home'
+const defaultRoute =
+  autoRoutes.find((route) => route.path === '/login')?.path ||
+  autoRoutes.find((route) => route.meta.level === 1)?.path ||
+  '/home'
 
 const router = createRouter({
   history: createWebHistory(),
