@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const goToDetail = () => {
-  router.push('/detail')
+  router.push('/home/detail')
 }
 
 const bannerList = ref([

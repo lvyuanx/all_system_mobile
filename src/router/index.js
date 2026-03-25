@@ -25,36 +25,44 @@ const toPascalCase = (value) => {
     .join('')
 }
 
-const viewModules = import.meta.glob('../views/**/*.vue')
+const toTitle = (segment) => {
+  if (!segment) return '页面'
+  const kebab = toKebabCase(segment)
+  return titleMap[kebab] || kebab
+}
+
+const viewModules = import.meta.glob('../views/**/index.vue')
 
 const autoRoutes = Object.entries(viewModules)
   .map(([filePath, component]) => {
-    const relativePath = filePath.replace('../views/', '').replace(/\.vue$/, '')
-    const segments = relativePath.split('/').filter(Boolean)
+    const relativePath = filePath.replace('../views/', '').replace(/\/index\.vue$/, '')
+    const pathSegments = relativePath
+      .split('/')
+      .filter(Boolean)
+      .map((segment) => toKebabCase(segment))
 
-    const routeSegments = segments.map((segment) => toKebabCase(segment))
-    const lastSegment = routeSegments[routeSegments.length - 1] || 'index'
-    const isIndexRoute = lastSegment === 'index'
-    const pathSegments = isIndexRoute ? routeSegments.slice(0, -1) : routeSegments
-
-    const path = pathSegments.length ? `/${pathSegments.join('/')}` : '/'
-    const routeKey = (pathSegments[pathSegments.length - 1] || 'home').toLowerCase()
-    const level = Math.max(1, segments.length)
+    const path = `/${pathSegments.join('/')}`
+    const routeKey = pathSegments[pathSegments.length - 1] || 'home'
+    const level = Math.max(1, pathSegments.length)
+    const parentSegments = pathSegments.slice(0, -1)
+    const parentPath = parentSegments.length ? `/${parentSegments.join('/')}` : ''
 
     return {
       path,
-      name: toPascalCase(pathSegments.join('-') || 'Home'),
+      name: toPascalCase(pathSegments.join('-')),
       component,
       meta: {
-        title: titleMap[routeKey] || routeKey,
+        title: toTitle(routeKey),
         level,
         keepAlive: level === 1,
         showTabbar: tabbarRouteNames.has(routeKey) && level === 1,
         showBack: level > 1,
+        routeKey,
+        parentPath,
+        hierarchy: pathSegments,
       },
     }
   })
-  .filter((route) => route.path !== '/')
   .sort((a, b) => {
     if (a.meta.level !== b.meta.level) {
       return a.meta.level - b.meta.level
@@ -62,7 +70,7 @@ const autoRoutes = Object.entries(viewModules)
     return a.path.localeCompare(b.path)
   })
 
-const defaultRoute = autoRoutes.find((route) => route.meta.level === 1)?.path || autoRoutes[0]?.path || '/home'
+const defaultRoute = autoRoutes.find((route) => route.meta.level === 1)?.path || '/home'
 
 const router = createRouter({
   history: createWebHistory(),

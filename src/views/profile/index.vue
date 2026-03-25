@@ -11,15 +11,15 @@ const userInfo = ref({
 })
 
 const menuList = ref([
-  { icon: 'balance-o', text: '我的订单', path: '/detail' },
-  { icon: 'coupon-o', text: '优惠券', path: '/detail' },
-  { icon: 'location-o', text: '收货地址', path: '/detail' },
-  { icon: 'service-o', text: '联系客服', path: '/detail' },
+  { icon: 'balance-o', text: '我的订单', path: '/home/detail' },
+  { icon: 'coupon-o', text: '优惠券', path: '/home/detail' },
+  { icon: 'location-o', text: '收货地址', path: '/home/detail' },
+  { icon: 'service-o', text: '联系客服', path: '/home/detail' },
 ])
 
 const settingsList = ref([
-  { icon: 'setting-o', text: '设置', path: '/settings' },
-  { icon: 'info-o', text: '关于我们', path: '/detail' },
+  { icon: 'setting-o', text: '设置', path: '/profile/settings' },
+  { icon: 'info-o', text: '关于我们', path: '/home/detail' },
 ])
 
 const handleMenuClick = (item) => {

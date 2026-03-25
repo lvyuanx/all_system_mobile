@@ -38,7 +38,7 @@ const currentSubCategories = computed(() => {
 })
 
 const goToDetail = () => {
-  router.push('/detail')
+  router.push('/home/detail')
 }
 </script>
 
