@@ -4,12 +4,10 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-// 跳转到详情页
 const goToDetail = () => {
   router.push('/detail')
 }
 
-// 示例数据
 const bannerList = ref([
   { id: 1, image: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg' },
   { id: 2, image: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-2.jpeg' },
@@ -25,14 +23,12 @@ const gridList = ref([
 
 <template>
   <div class="home-page">
-    <!-- 轮播图 -->
     <van-swipe :autoplay="3000" indicator-color="white" class="banner-swipe">
       <van-swipe-item v-for="item in bannerList" :key="item.id">
         <img :src="item.image" alt="banner" class="banner-img" />
       </van-swipe-item>
     </van-swipe>
 
-    <!-- 宫格导航 -->
     <van-grid :column-num="4" :border="false" class="grid-section">
       <van-grid-item
         v-for="item in gridList"
@@ -43,18 +39,11 @@ const gridList = ref([
       />
     </van-grid>
 
-    <!-- 示例内容 -->
     <van-cell-group inset title="推荐商品" class="goods-section">
-      <van-cell
-        title="示例商品"
-        label="点击查看详情"
-        is-link
-        @click="goToDetail"
-      />
+      <van-cell title="示例商品" label="点击查看详情" is-link @click="goToDetail" />
       <van-cell title="更多商品" is-link @click="goToDetail" />
     </van-cell-group>
 
-    <!-- 底部提示 -->
     <div class="bottom-tip">
       <van-notice-bar
         left-icon="volume-o"

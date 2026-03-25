@@ -1,11 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
-const router = useRouter()
 const route = useRoute()
 
-// 商品详情
 const product = ref({
   id: 1,
   title: '示例商品详情',
@@ -17,36 +15,17 @@ const product = ref({
   sales: 1000,
 })
 
-// 步进器数量
-const quantity = ref(1)
-
-// 显示 SKU
 const showSku = ref(false)
 
-// SKU 配置
-const sku = ref({
-  price: '199.00',
-  stock_num: 100,
-})
-
-// 加入购物车
 const onAddCart = () => {
   vant.showToast('已加入购物车')
 }
 
-// 立即购买
 const onBuyNow = () => {
   vant.showToast('跳转结算页面')
 }
 
-// 返回首页
-const goBack = () => {
-  router.back()
-}
-
-// 页面加载
 onMounted(() => {
-  // 获取路由参数
   const id = route.query.id
   if (id) {
     console.log('商品ID:', id)
@@ -56,14 +35,12 @@ onMounted(() => {
 
 <template>
   <div class="detail-page">
-    <!-- 商品图片 -->
     <van-swipe :autoplay="3000" indicator-color="white">
       <van-swipe-item>
         <img :src="product.image" alt="商品图片" class="product-image" />
       </van-swipe-item>
     </van-swipe>
 
-    <!-- 商品信息 -->
     <van-cell-group inset class="product-info">
       <van-cell :title="product.title" :border="false">
         <template #label>
@@ -78,12 +55,10 @@ onMounted(() => {
       <van-cell title="商品详情" :label="product.desc" :border="false" />
     </van-cell-group>
 
-    <!-- 规格选择 -->
     <van-cell-group inset class="specs-section">
       <van-cell title="规格" is-link @click="showSku = true" />
     </van-cell-group>
 
-    <!-- 用户评价 -->
     <van-cell-group inset class="comment-section">
       <van-cell title="用户评价" value="查看全部" is-link />
       <van-cell :border="false">
@@ -104,7 +79,6 @@ onMounted(() => {
       </van-cell>
     </van-cell-group>
 
-    <!-- 底部操作栏 -->
     <van-action-bar>
       <van-action-bar-icon icon="chat-o" text="客服" />
       <van-action-bar-icon icon="cart-o" text="购物车" />

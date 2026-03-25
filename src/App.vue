@@ -117,7 +117,13 @@ const onAfterEnter = () => {
     </div>
 
     <div v-if="showTabbar" class="tabbar-wrapper">
-      <van-tabbar v-model="activeTab" @change="onTabChange" safe-area-inset-bottom>
+      <van-tabbar
+        v-model="activeTab"
+        active-color="var(--color-primary)"
+        inactive-color="var(--color-text-light)"
+        @change="onTabChange"
+        safe-area-inset-bottom
+      >
         <van-tabbar-item
           v-for="item in tabbarList"
           :key="item.name"

@@ -1,13 +1,11 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-// 侧边栏索引
 const activeKey = ref(0)
 
-// 分类数据
 const categories = ref([
   { text: '热门推荐', id: 0 },
   { text: '手机数码', id: 1 },
@@ -19,7 +17,6 @@ const categories = ref([
   { text: '运动户外', id: 7 },
 ])
 
-// 子分类数据
 const subCategories = ref({
   0: [
     { name: '热门商品 1', price: '¥99', desc: '热销中' },
@@ -36,13 +33,11 @@ const subCategories = ref({
   ],
 })
 
-// 当前子分类
 const currentSubCategories = computed(() => {
   return subCategories.value[activeKey.value] || []
 })
 
-// 跳转到详情页
-const goToDetail = (item) => {
+const goToDetail = () => {
   router.push('/detail')
 }
 </script>
@@ -66,7 +61,7 @@ const goToDetail = (item) => {
           :desc="item.desc"
           :price="item.price"
           :thumb="`https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg`"
-          @click="goToDetail(item)"
+          @click="goToDetail"
         />
       </van-pull-refresh>
 
@@ -100,7 +95,3 @@ const goToDetail = (item) => {
   background-color: var(--color-card);
 }
 </style>
-
-<script>
-import { computed } from 'vue'
-</script>

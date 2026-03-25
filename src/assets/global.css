@@ -482,7 +482,8 @@ body {
 }
 
 /* Icon / 图标 */
-.mobile-container .van-icon {
+.mobile-container .van-cell .van-icon,
+.mobile-container .van-action-bar .van-icon {
   color: var(--color-text);
 }
 
@@ -571,7 +572,17 @@ body {
   color: var(--color-text-light);
 }
 
+.mobile-container .van-tabbar-item .van-tabbar-item__icon,
+.mobile-container .van-tabbar-item .van-icon {
+  color: var(--color-text-light);
+}
+
 .mobile-container .van-tabbar-item--active {
+  color: var(--color-primary);
+}
+
+.mobile-container .van-tabbar-item--active .van-tabbar-item__icon,
+.mobile-container .van-tabbar-item--active .van-icon {
   color: var(--color-primary);
 }
 
