@@ -101,7 +101,7 @@ const success = () => {
 const touchstart = (e) => {
   if (props.loading || isSuccess.value) return
 
-  const startClientX = e.targetTouches[0].clientX
+  const startClientX = e.targetTouches ? e.targetTouches[0].clientX : e.clientX
   if (startClientX <= EDGE_GESTURE_WIDTH) {
     canDrag.value = false
     isDragging.value = false
@@ -117,7 +117,8 @@ const touchstart = (e) => {
 const touchmove = (e) => {
   if (props.loading || isSuccess.value || !canDrag.value) return
   e.preventDefault()
-  nowX.value = e.targetTouches[0].clientX
+  const clientX = e.targetTouches ? e.targetTouches[0].clientX : e.clientX
+  nowX.value = clientX
   offsetX.value = getOffsetX(startOffsetX.value + (nowX.value - startX.value), 0, successMoveDistance.value)
   applyStyle(false)
 }
@@ -132,14 +133,34 @@ const touchend = () => {
   }
 }
 
+// 鼠标事件处理
+const mousedown = (e) => {
+  touchstart(e)
+}
+
+const mousemove = (e) => {
+  if (isDragging.value) {
+    touchmove(e)
+  }
+}
+
+const mouseup = () => {
+  touchend()
+}
+
 onMounted(() => {
   updateDistance()
   reset()
   window.addEventListener('resize', updateDistance)
+  // 添加全局鼠标事件监听
+  window.addEventListener('mousemove', mousemove)
+  window.addEventListener('mouseup', mouseup)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateDistance)
+  window.removeEventListener('mousemove', mousemove)
+  window.removeEventListener('mouseup', mouseup)
 })
 
 defineExpose({
@@ -159,6 +180,7 @@ defineExpose({
       @touchstart="touchstart"
       @touchmove="touchmove"
       @touchend="touchend"
+      @mousedown="mousedown"
     >
       <van-icon v-if="!isSuccess" class="slider-icon" name="arrow" />
       <van-icon v-else class="slider-icon success-icon" name="success" />

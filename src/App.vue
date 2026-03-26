@@ -12,7 +12,6 @@ const pageStack = []
 
 const tabbarList = [
   { name: 'home', title: '首页', icon: 'home-o', path: '/home' },
-  { name: 'category', title: '分类', icon: 'apps-o', path: '/category' },
   { name: 'profile', title: '我的', icon: 'user-o', path: '/profile' },
 ]
 
