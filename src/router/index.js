@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const titleMap = {
   home: '首页',
@@ -10,6 +11,9 @@ const titleMap = {
 }
 
 const tabbarRouteNames = new Set(['home', 'category', 'profile'])
+
+// 不需要登录即可访问的页面
+const publicRoutes = new Set(['login'])
 
 const toKebabCase = (value) => {
   return value
@@ -89,9 +93,33 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
+  // 设置页面标题
   if (to.meta.title) {
     document.title = to.meta.title
   }
+
+  // 获取用户状态
+  const userStore = useUserStore()
+
+  // 检查是否需要登录
+  const routeKey = to.meta.routeKey
+  const isPublicRoute = publicRoutes.has(routeKey)
+
+  // 如果未登录且访问非公开页面，重定向到登录页
+  if (!userStore.isLoggedIn && !isPublicRoute) {
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath },
+    })
+    return
+  }
+
+  // 如果已登录且访问登录页，重定向到首页
+  if (userStore.isLoggedIn && routeKey === 'login') {
+    next('/home')
+    return
+  }
+
   next()
 })
 

@@ -1,8 +1,11 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { showConfirmDialog, showToast } from 'vant'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 const topActions = ref([
   { key: 'pending', icon: 'todo-list-o', text: '待处理订单', path: '/home/detail' },
@@ -22,18 +25,22 @@ const userTools = ref([
   { key: 'records', icon: 'clock-o', text: '操作记录', path: '/home/detail' },
 ])
 
+// 获取用户昵称
+const nickname = computed(() => userStore.userInfo.nickname || '用户')
+
 const goAction = (path) => {
   router.push(path)
 }
 
 const goLogout = () => {
-  vant.showConfirmDialog({
+  showConfirmDialog({
     title: '退出登录',
     message: '确认退出当前账号吗？',
   })
     .then(() => {
-      vant.showToast('已退出登录')
-      router.push('/profile')
+      userStore.logout()
+      showToast('已退出登录')
+      router.replace('/login')
     })
     .catch(() => { })
 }
@@ -68,7 +75,7 @@ const goLogout = () => {
 
     <section class="panel">
       <div class="panel-header">
-        <div class="username">吕元祥</div>
+        <div class="username">{{ nickname }}</div>
         <button class="logout-btn" @click="goLogout">
           <van-icon name="contact-o" />
           <span>退出登录</span>

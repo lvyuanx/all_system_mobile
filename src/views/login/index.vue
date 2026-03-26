@@ -1,10 +1,13 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
+import { useUserStore } from '@/stores/user'
 import SlideToLogin from './components/SlideToLogin.vue'
 
 const router = useRouter()
+const route = useRoute()
+const userStore = useUserStore()
 const loading = ref(false)
 const slideLoginRef = ref(null)
 
@@ -32,8 +35,15 @@ const onLogin = async () => {
 
   try {
     await new Promise((resolve) => setTimeout(resolve, 500))
+    // 调用 store 的 login 方法
+    userStore.login({
+      username: form.username,
+      nickname: form.username,
+    })
     showToast('登录成功')
-    router.replace('/home')
+    // 跳转到原来要访问的页面，或首页
+    const redirect = route.query.redirect || '/home'
+    router.replace(redirect)
   } finally {
     loading.value = false
     resetSlider()
@@ -151,7 +161,7 @@ const onLogin = async () => {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #0a0e1a;
+  background: linear-gradient(180deg, #e8f4ff 0%, #f0f7ff 30%, #f7f9fc 100%);
   max-width: 430px;
   margin: 0 auto;
   left: 0;
@@ -186,7 +196,7 @@ const onLogin = async () => {
   height: 280px;
   top: -60px;
   left: -40px;
-  background: radial-gradient(circle, #1a4fd6 0%, #0d2b7a 60%, transparent 100%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(96, 165, 250, 0.2) 60%, transparent 100%);
   animation: driftA 12s ease-in-out infinite;
 }
 
@@ -195,7 +205,7 @@ const onLogin = async () => {
   height: 240px;
   top: 30px;
   right: -50px;
-  background: radial-gradient(circle, #6d28d9 0%, #3b0764 60%, transparent 100%);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, rgba(167, 139, 250, 0.15) 60%, transparent 100%);
   animation: driftB 14s ease-in-out infinite 2s;
 }
 
@@ -204,7 +214,7 @@ const onLogin = async () => {
   height: 200px;
   bottom: 80px;
   left: -60px;
-  background: radial-gradient(circle, #0ea5e9 0%, #075985 60%, transparent 100%);
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.35) 0%, rgba(56, 189, 248, 0.15) 60%, transparent 100%);
   animation: driftC 16s ease-in-out infinite 1s;
 }
 
@@ -213,7 +223,7 @@ const onLogin = async () => {
   height: 220px;
   bottom: 40px;
   right: -30px;
-  background: radial-gradient(circle, #7c3aed 0%, #4c1d95 60%, transparent 100%);
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.3) 0%, rgba(139, 92, 246, 0.12) 60%, transparent 100%);
   animation: driftA 10s ease-in-out infinite reverse 3s;
 }
 
@@ -290,8 +300,8 @@ const onLogin = async () => {
   width: 80px;
   height: 80px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   display: flex;
@@ -299,9 +309,9 @@ const onLogin = async () => {
   justify-content: center;
   margin-bottom: 18px;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    0 8px 32px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
 .logo-glow {
@@ -320,24 +330,24 @@ const onLogin = async () => {
 
 .logo-icon {
   font-size: 40px;
-  color: #60a5fa;
+  color: #2563eb;
   position: relative;
   z-index: 1;
-  filter: drop-shadow(0 0 12px rgba(96, 165, 250, 0.8));
+  filter: drop-shadow(0 2px 8px rgba(37, 99, 235, 0.3));
 }
 
 .brand-title {
   font-size: 21px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #1f2937;
   letter-spacing: 2px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.8);
 }
 
 .brand-en {
   margin-top: 5px;
   font-size: 9px;
-  color: rgba(148, 163, 184, 0.7);
+  color: rgba(100, 116, 139, 0.8);
   letter-spacing: 3px;
 }
 
@@ -350,15 +360,15 @@ const onLogin = async () => {
   max-width: 390px;
   padding: 28px 22px 26px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  backdrop-filter: blur(40px) saturate(160%);
-  -webkit-backdrop-filter: blur(40px) saturate(160%);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
   box-shadow:
-    0 0 0 0.5px rgba(255, 255, 255, 0.05),
-    0 24px 64px rgba(0, 0, 0, 0.5),
-    0 4px 16px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 0 0 0.5px rgba(255, 255, 255, 0.5),
+    0 24px 64px rgba(59, 130, 246, 0.08),
+    0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   animation: fadeSlideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
   overflow: hidden;
 }
@@ -404,10 +414,10 @@ const onLogin = async () => {
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(96, 165, 250, 0.12);
-  border: 1px solid rgba(96, 165, 250, 0.25);
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   font-size: 11px;
-  color: #93c5fd;
+  color: #2563eb;
   letter-spacing: 0.5px;
 }
 
@@ -415,8 +425,8 @@ const onLogin = async () => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #4ade80;
-  box-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
   animation: blink 2s ease-in-out infinite;
 }
 
@@ -428,14 +438,14 @@ const onLogin = async () => {
 .card-title {
   font-size: 22px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #1f2937;
   letter-spacing: 0.5px;
 }
 
 .card-desc {
   margin-top: 4px;
   font-size: 12px;
-  color: rgba(148, 163, 184, 0.8);
+  color: rgba(100, 116, 139, 0.9);
 }
 
 /* =====================
@@ -459,13 +469,13 @@ const onLogin = async () => {
   gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: rgba(148, 163, 184, 0.9);
+  color: rgba(71, 85, 105, 0.9);
   letter-spacing: 0.3px;
 }
 
 .field-label .van-icon {
   font-size: 14px;
-  color: #60a5fa;
+  color: #3b82f6;
 }
 
 .field-input-wrap {
@@ -479,25 +489,26 @@ const onLogin = async () => {
   border: none;
   outline: none;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.8);
   font-size: 14px;
-  color: #f1f5f9;
+  color: #1f2937;
   transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  appearance: none;
   -webkit-appearance: none;
 }
 
 .field-input::placeholder {
-  color: rgba(148, 163, 184, 0.4);
+  color: rgba(148, 163, 184, 0.8);
   font-size: 13px;
 }
 
 .field-input:focus {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(59, 130, 246, 0.5);
   box-shadow:
-    0 0 0 3px rgba(96, 165, 250, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 0 0 3px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 /* 底部动画线 */
@@ -531,12 +542,12 @@ const onLogin = async () => {
 .divider-line {
   flex: 1;
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(203, 213, 225, 0.5);
 }
 
 .divider-text {
   font-size: 11px;
-  color: rgba(148, 163, 184, 0.5);
+  color: rgba(148, 163, 184, 0.8);
   letter-spacing: 1px;
   white-space: nowrap;
 }
@@ -563,7 +574,7 @@ const onLogin = async () => {
   gap: 8px;
   margin-top: 28px;
   font-size: 10px;
-  color: rgba(100, 116, 139, 0.5);
+  color: rgba(100, 116, 139, 0.6);
   letter-spacing: 0.5px;
 }
 
@@ -575,25 +586,25 @@ const onLogin = async () => {
 }
 
 /* =====================
-   SlideToLogin 深色适配
+   SlideToLogin 浅色适配
    ===================== */
 :deep(.slide-login-box) {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: none !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08) !important;
 }
 
 :deep(.slide-login-box::after) {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0),
-    rgba(255, 255, 255, 0.12),
-    rgba(255, 255, 255, 0)
+    rgba(226, 232, 240, 0),
+    rgba(226, 232, 240, 0.5),
+    rgba(226, 232, 240, 0)
   ) !important;
 }
 
 :deep(.txt) {
-  color: rgba(148, 163, 184, 0.8) !important;
+  color: rgba(100, 116, 139, 0.9) !important;
   font-weight: 500 !important;
 }
 
@@ -602,23 +613,23 @@ const onLogin = async () => {
 }
 
 :deep(.bg-color) {
-  background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%) !important;
-  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5) !important;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35) !important;
 }
 
 :deep(.slider) {
-  background: linear-gradient(145deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%) !important;
+  border: 1px solid rgba(203, 213, 225, 0.6) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  color: #93c5fd !important;
+  color: #3b82f6 !important;
 }
 
 :deep(.slider.success) {
-  color: #4ade80 !important;
-  background: linear-gradient(145deg, rgba(74,222,128,0.15) 0%, rgba(34,197,94,0.08) 100%) !important;
-  border-color: rgba(74, 222, 128, 0.3) !important;
-  box-shadow: 0 8px 24px rgba(74, 222, 128, 0.3) !important;
+  color: #22c55e !important;
+  background: linear-gradient(145deg, rgba(34,197,94,0.1) 0%, rgba(22,163,74,0.05) 100%) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.2) !important;
 }
 
 
