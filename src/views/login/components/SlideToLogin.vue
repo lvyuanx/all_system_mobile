@@ -18,6 +18,7 @@ const isSuccess = ref(false)
 const isDragging = ref(false)
 const canDrag = ref(false)
 const startX = ref(0)
+const startOffsetX = ref(0)
 const nowX = ref(0)
 const offsetX = ref(0)
 const successMoveDistance = ref(0)
@@ -110,13 +111,14 @@ const touchstart = (e) => {
   canDrag.value = true
   isDragging.value = true
   startX.value = startClientX
+  startOffsetX.value = offsetX.value
 }
 
 const touchmove = (e) => {
   if (props.loading || isSuccess.value || !canDrag.value) return
   e.preventDefault()
   nowX.value = e.targetTouches[0].clientX
-  offsetX.value = getOffsetX(nowX.value - startX.value, 0, successMoveDistance.value)
+  offsetX.value = getOffsetX(startOffsetX.value + (nowX.value - startX.value), 0, successMoveDistance.value)
   applyStyle(false)
 }
 
@@ -168,8 +170,8 @@ defineExpose({
 .slide-login-box {
   position: relative;
   width: 100%;
-  height: 44px;
-  border-radius: 24px;
+  height: 60px;
+  border-radius: 30px;
   background: linear-gradient(180deg, #eff6ff 0%, #e4f1ff 100%);
   overflow: visible;
   touch-action: pan-y;
@@ -182,8 +184,8 @@ defineExpose({
   top: 2px;
   left: -35%;
   width: 35%;
-  height: 40px;
-  border-radius: 20px;
+  height: 56px;
+  border-radius: 28px;
   background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
   animation: shimmer 2.4s ease-in-out infinite;
   pointer-events: none;
@@ -193,9 +195,9 @@ defineExpose({
   position: absolute;
   left: 0;
   top: 0;
-  width: 32px;
-  height: 44px;
-  border-radius: 24px;
+  width: 40px;
+  height: 60px;
+  border-radius: 30px;
   background: linear-gradient(90deg, #46a8ff 0%, #1989fa 100%);
   box-shadow: 0 8px 16px rgba(25, 137, 250, 0.3);
 }
@@ -226,16 +228,16 @@ defineExpose({
   position: absolute;
   left: -5px;
   top: -5px;
-  width: 54px;
-  height: 54px;
-  border-radius: 27px;
+  width: 70px;
+  height: 70px;
+  border-radius: 35px;
   background: linear-gradient(180deg, var(--btn-from, #ffffff) 0%, var(--btn-to, #f3f8ff) 100%);
   box-shadow: var(--btn-shadow, 0 4px 14px rgba(25, 137, 250, 0.28));
   display: flex;
   align-items: center;
   justify-content: center;
   color: #1989fa;
-  font-size: 22px;
+  font-size: 26px;
   transform: scale(var(--btn-scale, 1));
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
