@@ -45,9 +45,14 @@ const onLogin = async () => {
     const loginData = response?.data || {}
 
     const normalizedUsername = form.username.trim()
+    const stripOrigin = (url) => {
+      if (!url) return ''
+      try { return new URL(url).pathname + new URL(url).search } catch { return url }
+    }
     userStore.login({
       username: loginData.username || normalizedUsername,
       nickname: loginData.full_name || loginData.username || normalizedUsername,
+      avatar: stripOrigin(loginData.avatar),
       token: loginData.token,
       tokenTag: loginData.token_tag || loginData.tokenTag,
     })

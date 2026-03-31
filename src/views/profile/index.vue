@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { mobileLogout } from '@/api/auth'
@@ -8,23 +7,17 @@ import { useUserStore } from '@/stores/user'
 const router = useRouter()
 const userStore = useUserStore()
 
-const userInfo = ref({
-  name: '用户昵称',
-  avatar: 'https://fastly.jsdelivr.net/npm/@vant/assets/user.jpeg',
-  vip: false,
-})
-
-const menuList = ref([
+const menuList = [
   { icon: 'balance-o', text: '我的订单', path: '/home/detail' },
   { icon: 'coupon-o', text: '优惠券', path: '/home/detail' },
   { icon: 'location-o', text: '收货地址', path: '/home/detail' },
   { icon: 'service-o', text: '联系客服', path: '/home/detail' },
-])
+]
 
-const settingsList = ref([
+const settingsList = [
   { icon: 'setting-o', text: '设置', path: '/profile/settings' },
   { icon: 'info-o', text: '关于我们', path: '/home/detail' },
-])
+]
 
 const handleMenuClick = (item) => {
   router.push(item.path)
@@ -59,14 +52,13 @@ const handleLogout = () => {
             round
             width="60"
             height="60"
-            :src="userInfo.avatar"
+            :src="userStore.userInfo.avatar || '/static/images/default/user_default.png'"
             fit="cover"
             class="avatar"
           />
-          <span class="username">{{ userInfo.name }}</span>
+          <span class="username">{{ userStore.userInfo.nickname || userStore.userInfo.username }}</span>
         </template>
         <template #right-icon>
-          <van-tag type="danger" v-if="userInfo.vip">VIP</van-tag>
         </template>
       </van-cell>
     </van-cell-group>
