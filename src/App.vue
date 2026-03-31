@@ -66,6 +66,13 @@ router.beforeEach((to, from, next) => {
   next()
 })
 
+const navTitle = computed(() => route.query.name || route.meta.title || '')
+
+const cachedComponents = computed(() => {
+  // level > 1 的非动态页面都缓存，menu 页因 query 变化用 watch 刷新，也缓存
+  return ['HomeIndex', 'HomeMenu']
+})
+
 const onTabChange = (name) => {
   const tab = tabbarList.find((item) => item.name === name)
   if (tab) {
@@ -91,7 +98,7 @@ const onAfterEnter = () => {
     <div class="navbar-wrapper">
       <van-nav-bar
         v-if="route.meta.showNavBar !== false && route.meta.title"
-        :title="route.meta.title"
+        :title="navTitle"
         :left-arrow="showBack"
         :fixed="true"
         :placeholder="true"
@@ -107,10 +114,13 @@ const onAfterEnter = () => {
           @after-enter="onAfterEnter"
           @after-leave="onAfterEnter"
         >
-          <keep-alive v-if="currentRoute.meta.keepAlive">
-            <component :is="Component" :key="currentRoute.fullPath" class="page-view" />
+          <keep-alive :include="cachedComponents">
+            <component
+              :is="Component"
+              :key="cachedComponents.includes(Component?.name) ? Component?.name : currentRoute.fullPath"
+              class="page-view"
+            />
           </keep-alive>
-          <component v-else :is="Component" :key="currentRoute.fullPath" class="page-view" />
         </transition>
       </router-view>
     </div>

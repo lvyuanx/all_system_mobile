@@ -1,28 +1,50 @@
 <script setup>
-import { ref, computed } from 'vue'
+defineOptions({ name: 'HomeIndex' })
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
+import { fetchMenus, preloadMenus } from '@/utils/menuCache'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const userTools = ref([
-  { key: 'orders', icon: 'orders-o', text: '订单总览', path: '/home/detail' },
-  { key: 'records', icon: 'clock-o', text: '操作记录', path: '/home/detail' },
-  { key: 'account', icon: 'setting-o', text: '账号管理', path: '/profile/settings' },
-  { key: 'orders', icon: 'orders-o', text: '订单总览', path: '/home/detail' },
-  { key: 'records', icon: 'clock-o', text: '操作记录', path: '/home/detail' },
-  { key: 'account', icon: 'setting-o', text: '账号管理', path: '/profile/settings' },
-  { key: 'orders', icon: 'orders-o', text: '订单总览', path: '/home/detail' },
-  { key: 'records', icon: 'clock-o', text: '操作记录', path: '/home/detail' },
-])
+const userTools = ref([])
+const loading = ref(false)
+
+const loadMenus = async () => {
+  loading.value = true
+  try {
+    userTools.value = await fetchMenus(null)
+    // 后台预加载所有顶级菜单的子菜单
+    userTools.value.forEach((item) => {
+      if (!item.url) preloadMenus(item.id)
+    })
+  } catch {
+    showToast('菜单加载失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadMenus()
+})
 
 // 获取用户昵称
 const nickname = computed(() => userStore.userInfo.nickname || '用户')
 
-const goAction = (path) => {
-  router.push(path)
+const goAction = async (item) => {
+  if (item.url) {
+    router.push(item.url.trim().replace(/_/g, '-'))
+    return
+  }
+  const children = await fetchMenus(item.id).catch(() => [])
+  if (children.length === 0) {
+    showToast('未找到相关功能')
+  } else {
+    router.push({ path: '/home/menu', query: { id: item.id, name: item.text } })
+  }
 }
 
 const goLogout = () => {
@@ -67,12 +89,15 @@ const goLogout = () => {
       </div>
 
       <div class="tool-grid">
-        <div v-for="item in userTools" :key="item.key" class="tool-item" @click="goAction(item.path)">
-          <div class="tool-icon">
-            <van-icon :name="item.icon" />
+        <van-loading v-if="loading" class="menu-loading" color="#2563eb" />
+        <template v-else>
+          <div v-for="item in userTools" :key="item.id" class="tool-item" @click="goAction(item)">
+            <div class="tool-icon">
+              <van-icon :name="item.icon" />
+            </div>
+            <span>{{ item.text }}</span>
           </div>
-          <span>{{ item.text }}</span>
-        </div>
+        </template>
       </div>
     </section>
   </div>
@@ -299,7 +324,7 @@ const goLogout = () => {
   gap: 10px;
   padding: 16px 0;
   color: #111827;
-  font-size: 13px;
+  font-size: 11px;
   border-radius: 12px;
   transition: background 0.2s ease;
 }
@@ -309,19 +334,26 @@ const goLogout = () => {
 }
 
 .tool-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
   background: rgba(59, 130, 246, 0.1);
   color: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 32px;
   transition: all 0.2s ease;
 }
 
 .tool-item:active .tool-icon {
   transform: scale(0.95);
+}
+
+.menu-loading {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
 }
 </style>

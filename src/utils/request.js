@@ -3,8 +3,11 @@ import { showToast, showLoadingToast, closeToast, showDialog } from 'vant'
 import { useUserStore } from '@/stores/user'
 
 // 创建 axios 实例
+const baseURL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+const apiPrefix = /\/api$/i.test(baseURL) ? '' : '/api'
+
 const request = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  baseURL: baseURL + apiPrefix,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

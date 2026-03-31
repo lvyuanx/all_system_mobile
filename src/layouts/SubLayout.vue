@@ -17,7 +17,7 @@ const onClickLeft = () => {
 
 // 页面标题
 const title = computed(() => {
-  return route.meta.title || '页面'
+  return route.query.name || route.meta.title || '页面'
 })
 
 const onBeforeEnter = () => {

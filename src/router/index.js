@@ -8,6 +8,9 @@ const titleMap = {
   detail: '详情页',
   settings: '设置',
   login: '登录',
+  menu: '功能菜单',
+  'pattern-library': '样板库',
+  'patter-library-search': '样板库搜索',
 }
 
 const tabbarRouteNames = new Set(['home', 'category', 'profile'])
@@ -94,7 +97,9 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   // 设置页面标题
-  if (to.meta.title) {
+  if (to.query.name) {
+    document.title = to.query.name
+  } else if (to.meta.title) {
     document.title = to.meta.title
   }
 
