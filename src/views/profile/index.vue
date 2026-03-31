@@ -1,8 +1,12 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { showConfirmDialog, showToast } from 'vant'
+import { mobileLogout } from '@/api/auth'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 const userInfo = ref({
   name: '用户昵称',
@@ -27,12 +31,20 @@ const handleMenuClick = (item) => {
 }
 
 const handleLogout = () => {
-  vant.showConfirmDialog({
+  showConfirmDialog({
     title: '提示',
     message: '确定要退出登录吗？',
   })
     .then(() => {
-      vant.showToast('已退出登录')
+      mobileLogout()
+        .then(() => {
+          userStore.logout()
+          showToast('已退出登录')
+          router.replace('/login')
+        })
+        .catch(() => {
+          showToast('退出登录失败，请重试')
+        })
     })
     .catch(() => {})
 }

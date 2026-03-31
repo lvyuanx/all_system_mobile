@@ -7,13 +7,6 @@ import { useUserStore } from '@/stores/user'
 const router = useRouter()
 const userStore = useUserStore()
 
-const topActions = ref([
-  { key: 'pending', icon: 'todo-list-o', text: '待处理订单', path: '/home/detail' },
-  { key: 'ship', icon: 'logistics', text: '发货管理', path: '/home/detail' },
-  { key: 'refund', icon: 'after-sale', text: '售后处理', path: '/home/detail' },
-  { key: 'stock', icon: 'cluster-o', text: '库存管理', path: '/home/detail' },
-])
-
 const userTools = ref([
   { key: 'orders', icon: 'orders-o', text: '订单总览', path: '/home/detail' },
   { key: 'records', icon: 'clock-o', text: '操作记录', path: '/home/detail' },
@@ -61,15 +54,6 @@ const goLogout = () => {
           <span class="welcome-text">欢迎使用</span>
           <span class="tag">订单管理</span>
         </div>
-      </div>
-    </section>
-
-    <section class="quick-actions">
-      <div v-for="item in topActions" :key="item.key" class="quick-item" @click="goAction(item.path)">
-        <div class="quick-icon-wrap">
-          <van-icon :name="item.icon" />
-        </div>
-        <span>{{ item.text }}</span>
       </div>
     </section>
 

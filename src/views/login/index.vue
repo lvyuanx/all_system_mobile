@@ -3,6 +3,7 @@ import { reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
+import { mobileLogin } from '@/api/auth'
 import SlideToLogin from './components/SlideToLogin.vue'
 
 const router = useRouter()
@@ -34,16 +35,27 @@ const onLogin = async () => {
   loading.value = true
 
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    // 调用 store 的 login 方法
+    const response = await mobileLogin(
+      {
+        username: form.username.trim(),
+        password: form.password,
+      },
+      { loading: false },
+    )
+    const loginData = response?.data || {}
+
+    const normalizedUsername = form.username.trim()
     userStore.login({
-      username: form.username,
-      nickname: form.username,
+      username: loginData.username || normalizedUsername,
+      nickname: loginData.full_name || loginData.username || normalizedUsername,
+      token: loginData.token,
+      tokenTag: loginData.token_tag || loginData.tokenTag,
     })
-    showToast('登录成功')
-    // 跳转到原来要访问的页面，或首页
+    showToast(response?.msg || '????')
     const redirect = route.query.redirect || '/home'
     router.replace(redirect)
+  } catch (error) {
+    // ?????????????
   } finally {
     loading.value = false
     resetSlider()

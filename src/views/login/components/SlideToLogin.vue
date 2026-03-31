@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
 const props = defineProps({
   loading: {
@@ -148,7 +148,8 @@ const mouseup = () => {
   touchend()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await nextTick()
   updateDistance()
   reset()
   window.addEventListener('resize', updateDistance)

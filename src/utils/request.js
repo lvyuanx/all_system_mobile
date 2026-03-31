@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { showToast, showLoadingToast, closeToast, showDialog } from 'vant'
+import { useUserStore } from '@/stores/user'
 
 // 创建 axios 实例
 const request = axios.create({
@@ -27,6 +28,13 @@ request.interceptors.request.use(
     // if (token) {
     //   config.headers.Authorization = `Bearer ${token}`
     // }
+
+    const userStore = useUserStore()
+    if (userStore.token) {
+      const tokenValue = userStore.token.startsWith('Bearer ') ? userStore.token : `Bearer ${userStore.token}`
+      config.headers = config.headers || {}
+      config.headers[userStore.tokenTag] = tokenValue
+    }
 
     return config
   },

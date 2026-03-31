@@ -4,22 +4,22 @@ import { ref, computed } from 'vue'
 export const useUserStore = defineStore(
   'user',
   () => {
-    // 用户登录状态
     const isLogin = ref(false)
+    const token = ref('')
+    const tokenTag = ref('Authorization')
 
-    // 用户信息
     const userInfo = ref({
       username: '',
       nickname: '',
       avatar: '',
     })
 
-    // 是否已登录
     const isLoggedIn = computed(() => isLogin.value)
 
-    // 登录
     const login = (userData = {}) => {
       isLogin.value = true
+      token.value = userData.token || ''
+      tokenTag.value = userData.tokenTag || userData.token_tag || 'Authorization'
       userInfo.value = {
         username: userData.username || '',
         nickname: userData.nickname || userData.username || '',
@@ -27,9 +27,10 @@ export const useUserStore = defineStore(
       }
     }
 
-    // 登出（只清除状态，路由跳转由调用方处理）
     const logout = () => {
       isLogin.value = false
+      token.value = ''
+      tokenTag.value = 'Authorization'
       userInfo.value = {
         username: '',
         nickname: '',
@@ -37,7 +38,6 @@ export const useUserStore = defineStore(
       }
     }
 
-    // 更新用户信息
     const updateUserInfo = (userData) => {
       userInfo.value = { ...userInfo.value, ...userData }
     }
@@ -45,6 +45,8 @@ export const useUserStore = defineStore(
     return {
       isLogin,
       isLoggedIn,
+      token,
+      tokenTag,
       userInfo,
       login,
       logout,
@@ -54,7 +56,7 @@ export const useUserStore = defineStore(
   {
     persist: {
       key: 'user_state',
-      paths: ['isLogin', 'userInfo'],
+      paths: ['isLogin', 'userInfo', 'token', 'tokenTag'],
       storage: localStorage,
     },
   },
