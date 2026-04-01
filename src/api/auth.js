@@ -12,3 +12,15 @@ export const getMobileMenuList = (parentId = null, config = {}) => {
   const params = parentId !== null ? { parent_id: parentId } : {}
   return http.get('/mobile/auth/menu/list/', params, config)
 }
+
+export const getProfile = (config = {}) => {
+  return http.get('/mobile/auth/account/profile/', {}, config)
+}
+
+export const updateProfile = (payload, config = {}) => {
+  return http.post('/mobile/auth/account/profile/update/', payload, config)
+}
+
+export const changePassword = (payload, config = {}) => {
+  return http.post('/mobile/auth/account/profile/change_password/', payload, config)
+}

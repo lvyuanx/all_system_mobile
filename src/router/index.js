@@ -11,6 +11,8 @@ const titleMap = {
   menu: '功能菜单',
   'pattern-library': '样板库',
   'patter-library-search': '样板库搜索',
+  info: '个人信息',
+  password: '密码修改',
 }
 
 const tabbarRouteNames = new Set(['home', 'category', 'profile'])

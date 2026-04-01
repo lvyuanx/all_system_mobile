@@ -8,10 +8,8 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const menuList = [
-  { icon: 'balance-o', text: '我的订单', path: '/home/detail' },
-  { icon: 'coupon-o', text: '优惠券', path: '/home/detail' },
-  { icon: 'location-o', text: '收货地址', path: '/home/detail' },
-  { icon: 'service-o', text: '联系客服', path: '/home/detail' },
+  { icon: 'contact-o', text: '个人信息', path: '/profile/info' },
+  { icon: 'lock', text: '密码修改', path: '/profile/password' },
 ]
 
 const settingsList = [
