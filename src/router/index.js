@@ -13,6 +13,7 @@ const titleMap = {
   'patter-library-search': '样板库搜索',
   info: '个人信息',
   password: '密码修改',
+  avatar: '修改头像',
 }
 
 const tabbarRouteNames = new Set(['home', 'category', 'profile'])

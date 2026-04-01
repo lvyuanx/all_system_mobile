@@ -24,3 +24,10 @@ export const updateProfile = (payload, config = {}) => {
 export const changePassword = (payload, config = {}) => {
   return http.post('/mobile/auth/account/profile/change_password/', payload, config)
 }
+
+export const updateAvatar = (formData, config = {}) => {
+  return http.post('/mobile/auth/account/profile/avatar/', formData, {
+    ...config,
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}

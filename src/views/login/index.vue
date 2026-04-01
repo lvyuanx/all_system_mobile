@@ -55,6 +55,8 @@ const onLogin = async () => {
       avatar: stripOrigin(loginData.avatar),
       token: loginData.token,
       tokenTag: loginData.token_tag || loginData.tokenTag,
+      date_joined: loginData.date_joined || '',
+      is_superuser: loginData.is_superuser || false,
     })
     showToast(response?.msg || '????')
     const redirect = route.query.redirect || '/home'

@@ -12,6 +12,8 @@ export const useUserStore = defineStore(
       username: '',
       nickname: '',
       avatar: '',
+      date_joined: '',
+      is_superuser: false,
     })
 
     const isLoggedIn = computed(() => isLogin.value)
@@ -24,6 +26,8 @@ export const useUserStore = defineStore(
         username: userData.username || '',
         nickname: userData.nickname || userData.username || '',
         avatar: userData.avatar || '',
+        date_joined: userData.date_joined || '',
+        is_superuser: userData.is_superuser || false,
       }
     }
 
@@ -35,6 +39,8 @@ export const useUserStore = defineStore(
         username: '',
         nickname: '',
         avatar: '',
+        date_joined: '',
+        is_superuser: false,
       }
     }
 
