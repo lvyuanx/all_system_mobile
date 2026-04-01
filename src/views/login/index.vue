@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
 import { mobileLogin } from '@/api/auth'
+import { getMobileStaffInfo } from '@/api/staff'
 import SlideToLogin from './components/SlideToLogin.vue'
 
 const router = useRouter()
@@ -58,6 +59,19 @@ const onLogin = async () => {
       date_joined: loginData.date_joined || '',
       is_superuser: loginData.is_superuser || false,
     })
+    // 登录后异步拉取员工信息
+    setTimeout(async () => {
+      try {
+        const staffRes = await getMobileStaffInfo({ loading: false })
+        const staffData = staffRes?.data || staffRes
+        if (staffData) {
+          userStore.updateStaffInfo({
+            staff_code: staffData.staff_code || '',
+            site_name: staffData.site_name || '',
+          })
+        }
+      } catch {}
+    }, 0)
     showToast(response?.msg || '????')
     const redirect = route.query.redirect || '/home'
     router.replace(redirect)

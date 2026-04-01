@@ -20,12 +20,11 @@ const workAge = computed(() => {
 
 const menuList = [
   { icon: 'contact-o', text: '个人信息', path: '/profile/info' },
-  { icon: 'lock', text: '密码修改', path: '/profile/password' },
+  { icon: 'info-o', text: '关于我们', path: '/profile/password' },
 ]
 
 const settingsList = [
-  { icon: 'setting-o', text: '设置', path: '/profile/settings' },
-  { icon: 'info-o', text: '关于我们', path: '/home/detail' },
+  { icon: 'setting-o', text: '系统设置', path: '/profile/settings' },
 ]
 
 const handleMenuClick = (item) => {
@@ -50,6 +49,7 @@ const handleLogout = () => {
     })
     .catch(() => {})
 }
+
 </script>
 
 <template>
@@ -91,6 +91,12 @@ const handleLogout = () => {
 
     <!-- 内容区 -->
     <div class="content">
+      <van-cell-group inset class="cell-group">
+        <template #title><span class="group-title">员工信息</span></template>
+        <van-cell title="工号" :value="userStore.staffInfo.staff_code || '-'" />
+        <van-cell title="站点" :value="userStore.staffInfo.site_name || '-'" />
+      </van-cell-group>
+
       <van-cell-group inset class="cell-group">
         <template #title><span class="group-title">我的服务</span></template>
         <van-cell

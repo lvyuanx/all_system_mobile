@@ -15,6 +15,10 @@ export const useUserStore = defineStore(
       date_joined: '',
       is_superuser: false,
     })
+    const staffInfo = ref({
+      staff_code: '',
+      site_name: '',
+    })
 
     const isLoggedIn = computed(() => isLogin.value)
 
@@ -42,10 +46,18 @@ export const useUserStore = defineStore(
         date_joined: '',
         is_superuser: false,
       }
+      staffInfo.value = {
+        staff_code: '',
+        site_name: '',
+      }
     }
 
     const updateUserInfo = (userData) => {
       userInfo.value = { ...userInfo.value, ...userData }
+    }
+
+    const updateStaffInfo = (staffData) => {
+      staffInfo.value = { ...staffInfo.value, ...staffData }
     }
 
     return {
@@ -54,15 +66,17 @@ export const useUserStore = defineStore(
       token,
       tokenTag,
       userInfo,
+      staffInfo,
       login,
       logout,
       updateUserInfo,
+      updateStaffInfo,
     }
   },
   {
     persist: {
       key: 'user_state',
-      paths: ['isLogin', 'userInfo', 'token', 'tokenTag'],
+      paths: ['isLogin', 'userInfo', 'staffInfo', 'token', 'tokenTag'],
       storage: localStorage,
     },
   },
