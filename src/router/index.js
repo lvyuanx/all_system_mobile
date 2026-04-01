@@ -11,6 +11,7 @@ const titleMap = {
   menu: '功能菜单',
   'pattern-library': '样板库',
   'patter-library-search': '样板库搜索',
+  detail: '版式详情',
   info: '个人信息',
   password: '密码修改',
   avatar: '修改头像',
