@@ -9,6 +9,7 @@ const route = useRoute()
 const transitionName = ref('ios-none')
 
 const pageStack = []
+let lastHistoryPosition = window.history.state?.position ?? 0
 
 const tabbarList = [
   { name: 'home', title: '首页', icon: 'home-o', path: '/home' },
@@ -28,10 +29,13 @@ router.beforeEach((to, from, next) => {
   const fromPath = from.fullPath
   const toLevel = Number(to.meta?.level || 0)
   const fromLevel = Number(from.meta?.level || 0)
+  const historyPosition = window.history.state?.position
+  const hasHistoryPosition = typeof historyPosition === 'number'
 
   if (!from.name) {
     transitionName.value = 'ios-none'
     if (!pageStack.includes(toPath)) pageStack.push(toPath)
+    if (hasHistoryPosition) lastHistoryPosition = historyPosition
     next()
     return
   }
@@ -44,6 +48,14 @@ router.beforeEach((to, from, next) => {
     } else {
       pageStack.splice(existed + 1)
     }
+    if (hasHistoryPosition) lastHistoryPosition = historyPosition
+    next()
+    return
+  }
+
+  if (hasHistoryPosition && historyPosition !== lastHistoryPosition) {
+    transitionName.value = historyPosition < lastHistoryPosition ? 'ios-back' : 'ios-forward'
+    lastHistoryPosition = historyPosition
     next()
     return
   }
@@ -64,6 +76,13 @@ router.beforeEach((to, from, next) => {
   }
 
   next()
+})
+
+router.afterEach(() => {
+  const historyPosition = window.history.state?.position
+  if (typeof historyPosition === 'number') {
+    lastHistoryPosition = historyPosition
+  }
 })
 
 const navTitle = computed(() => route.query.name || route.meta.title || '')

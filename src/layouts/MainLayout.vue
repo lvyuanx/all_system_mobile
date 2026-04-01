@@ -41,13 +41,6 @@ const onTabChange = (name) => {
   }
 }
 
-const onBeforeEnter = () => {
-  document.body.classList.add('page-transitioning')
-}
-
-const onAfterEnter = () => {
-  document.body.classList.remove('page-transitioning')
-}
 </script>
 
 <template>
@@ -67,37 +60,21 @@ const onAfterEnter = () => {
     <!-- 页面内容区域（支持缓存） - 参与动画 -->
     <div class="page-container">
       <router-view v-slot="{ Component, route: currentRoute }">
-        <transition
-          :name="currentRoute.meta.pageTransition || 'ios-none'"
-          mode="out-in"
-          @before-enter="onBeforeEnter"
-          @after-enter="onAfterEnter"
-          @after-leave="onAfterEnter"
-        >
-          <keep-alive>
-            <component
-              :is="Component"
-              v-if="currentRoute.meta.keepAlive"
-              :key="currentRoute.fullPath"
-              class="page-view"
-            />
-          </keep-alive>
-        </transition>
-
-        <transition
-          :name="currentRoute.meta.pageTransition || 'ios-none'"
-          mode="out-in"
-          @before-enter="onBeforeEnter"
-          @after-enter="onAfterEnter"
-          @after-leave="onAfterEnter"
-        >
+        <keep-alive>
           <component
             :is="Component"
-            v-if="!currentRoute.meta.keepAlive"
+            v-if="currentRoute.meta.keepAlive"
             :key="currentRoute.fullPath"
             class="page-view"
           />
-        </transition>
+        </keep-alive>
+
+        <component
+          :is="Component"
+          v-if="!currentRoute.meta.keepAlive"
+          :key="currentRoute.fullPath"
+          class="page-view"
+        />
       </router-view>
     </div>
 

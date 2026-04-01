@@ -20,13 +20,6 @@ const title = computed(() => {
   return route.query.name || route.meta.title || '页面'
 })
 
-const onBeforeEnter = () => {
-  document.body.classList.add('page-transitioning')
-}
-
-const onAfterEnter = () => {
-  document.body.classList.remove('page-transitioning')
-}
 </script>
 
 <template>
@@ -45,15 +38,7 @@ const onAfterEnter = () => {
     <!-- 页面内容区域 - 参与动画 -->
     <div class="content">
       <router-view v-slot="{ Component, route: currentRoute }">
-        <transition
-          :name="currentRoute.meta.pageTransition || 'ios-none'"
-          mode="out-in"
-          @before-enter="onBeforeEnter"
-          @after-enter="onAfterEnter"
-          @after-leave="onAfterEnter"
-        >
-          <component :is="Component" :key="currentRoute.fullPath" class="page-view" />
-        </transition>
+        <component :is="Component" :key="currentRoute.fullPath" class="page-view" />
       </router-view>
     </div>
   </div>
