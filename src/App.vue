@@ -23,6 +23,7 @@ const activeTab = computed(() => {
 
 const showTabbar = computed(() => route.meta.showTabbar === true)
 const showBack = computed(() => route.meta.showBack === true)
+const showHomeShortcut = computed(() => route.path !== '/home')
 
 router.beforeEach((to, from, next) => {
   const toPath = to.fullPath
@@ -100,7 +101,17 @@ const onTabChange = (name) => {
 }
 
 const onClickLeft = () => {
-  router.back()
+  const hasBack = Boolean(window.history.state?.back)
+  if (hasBack) {
+    router.back()
+    return
+  }
+  router.replace('/home')
+}
+
+const onClickRight = () => {
+  if (route.path === '/home') return
+  router.replace('/home')
 }
 
 const onBeforeEnter = () => {
@@ -122,6 +133,8 @@ const onAfterEnter = () => {
         :fixed="true"
         :placeholder="true"
         @click-left="onClickLeft"
+        @click-right="onClickRight"
+        :right-text="showHomeShortcut ? '首页' : ''"
       />
     </div>
 
