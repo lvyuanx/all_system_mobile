@@ -667,8 +667,9 @@ body {
 .mobile-container .van-dialog,
 .mobile-container .van-toast {
   max-width: 430px;
-  left: 50% !important;
-  transform: translateX(-50%);
+  left: 0 !important;
+  right: 0 !important;
+  margin: 0 auto;
 }
 
 /* 覆盖特定组件的样式 */
@@ -697,6 +698,7 @@ body {
   .mobile-container .van-toast {
     max-width: 100%;
     left: 0 !important;
-    transform: none;
+    right: 0 !important;
+    margin: 0;
   }
 }

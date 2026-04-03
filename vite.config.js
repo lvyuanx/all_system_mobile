@@ -8,6 +8,7 @@ import { VantResolver } from '@vant/auto-import-resolver'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [
     vue(),
     vueJsx(),
@@ -19,6 +20,26 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
+    },
+  },
+  build: {
+    target: 'es2018',
+    sourcemap: false,
+    cssCodeSplit: true,
+    reportCompressedSize: false,
+    chunkSizeWarningLimit: 1200,
+    assetsInlineLimit: 4096,
+    rollupOptions: {
+      output: {
+        chunkFileNames: 'js/[name]-[hash].js',
+        entryFileNames: 'js/[name]-[hash].js',
+        assetFileNames: '[ext]/[name]-[hash].[ext]',
+        manualChunks: {
+          vue: ['vue', 'vue-router', 'pinia'],
+          vant: ['vant'],
+          axios: ['axios'],
+        },
+      },
     },
   },
   server: {
