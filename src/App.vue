@@ -28,8 +28,8 @@ const showHomeShortcut = computed(() => route.path !== '/home')
 router.beforeEach((to, from, next) => {
   const toPath = to.fullPath
   const fromPath = from.fullPath
-  const toLevel = Number(to.meta?.level || 0)
-  const fromLevel = Number(from.meta?.level || 0)
+  const toLevel = Number(to.meta?.index ?? to.meta?.level ?? 0)
+  const fromLevel = Number(from.meta?.index ?? from.meta?.level ?? 0)
   const historyPosition = window.history.state?.position
   const hasHistoryPosition = typeof historyPosition === 'number'
 
