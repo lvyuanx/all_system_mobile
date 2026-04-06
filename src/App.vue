@@ -22,8 +22,6 @@ const activeTab = computed(() => {
 })
 
 const showTabbar = computed(() => route.meta.showTabbar === true)
-const showBack = computed(() => route.meta.showBack === true)
-const showHomeShortcut = computed(() => route.path !== '/home')
 
 router.beforeEach((to, from, next) => {
   const toPath = to.fullPath
@@ -32,6 +30,18 @@ router.beforeEach((to, from, next) => {
   const fromLevel = Number(from.meta?.index ?? from.meta?.level ?? 0)
   const historyPosition = window.history.state?.position
   const hasHistoryPosition = typeof historyPosition === 'number'
+
+  if (toPath === fromPath) {
+    transitionName.value = 'ios-none'
+    next()
+    return
+  }
+  // Query 参数变化不触发方向动画，避免“重进页面”感
+  if (to.path === from.path) {
+    transitionName.value = 'ios-none'
+    next()
+    return
+  }
 
   if (!from.name) {
     transitionName.value = 'ios-none'
@@ -86,8 +96,6 @@ router.afterEach(() => {
   }
 })
 
-const navTitle = computed(() => route.query.name || route.meta.title || '')
-
 const cachedComponents = computed(() => {
   // level > 1 的非动态页面都缓存，menu 页因 query 变化用 watch 刷新，也缓存
   return ['HomeIndex', 'HomeMenu']
@@ -95,23 +103,10 @@ const cachedComponents = computed(() => {
 
 const onTabChange = (name) => {
   const tab = tabbarList.find((item) => item.name === name)
-  if (tab) {
-    router.push(tab.path)
+  if (tab && tab.path !== route.path) {
+    // Tab 切换不入历史，避免重复点击后动画方向错乱
+    router.replace(tab.path)
   }
-}
-
-const onClickLeft = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) {
-    router.back()
-    return
-  }
-  router.replace('/home')
-}
-
-const onClickRight = () => {
-  if (route.path === '/home') return
-  router.replace('/home')
 }
 
 const onBeforeEnter = () => {
@@ -125,19 +120,6 @@ const onAfterEnter = () => {
 
 <template>
   <div class="app-shell">
-    <div class="navbar-wrapper">
-      <van-nav-bar
-        v-if="route.meta.showNavBar !== false && route.meta.title"
-        :title="navTitle"
-        :left-arrow="showBack"
-        :fixed="true"
-        :placeholder="true"
-        @click-left="onClickLeft"
-        @click-right="onClickRight"
-        :right-text="showHomeShortcut ? '首页' : ''"
-      />
-    </div>
-
     <div class="content-wrapper">
       <router-view v-slot="{ Component, route: currentRoute }">
         <transition
@@ -149,7 +131,13 @@ const onAfterEnter = () => {
           <keep-alive :include="cachedComponents">
             <component
               :is="Component"
-              :key="cachedComponents.includes(Component?.name) ? Component?.name : currentRoute.fullPath"
+              :key="
+                cachedComponents.includes(Component?.name)
+                  ? Component?.name
+                  : currentRoute.meta?.stableKeyByPath
+                    ? currentRoute.path
+                    : currentRoute.fullPath
+              "
               class="page-view"
             />
           </keep-alive>
@@ -188,12 +176,6 @@ const onAfterEnter = () => {
   overflow: hidden;
 }
 
-.navbar-wrapper {
-  position: relative;
-  z-index: 100;
-  flex-shrink: 0;
-}
-
 .content-wrapper {
   flex: 1;
   position: relative;
@@ -218,6 +200,11 @@ const onAfterEnter = () => {
   z-index: 100;
   flex-shrink: 0;
   height: calc(var(--van-tabbar-height) + env(safe-area-inset-bottom));
+}
+
+.tabbar-wrapper :deep(.van-tabbar-item) {
+  padding-top: 10px;
+  padding-bottom: 12px;
 }
 
 .ios-forward-enter-active,

@@ -1,6 +1,6 @@
-<script setup>
+﻿<script setup>
 defineOptions({ name: 'HomeMenu' })
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { fetchMenus, preloadMenus } from '@/utils/menuCache'
@@ -10,17 +10,27 @@ const router = useRouter()
 
 const menus = ref([])
 const loading = ref(false)
+const navTitle = computed(() => route.query.name || '功能菜单')
+
+const onClickLeft = () => {
+  const hasBack = Boolean(window.history.state?.back)
+  if (hasBack) {
+    router.back()
+    return
+  }
+  router.replace('/home')
+}
 
 const loadMenus = async () => {
+  if (route.path !== '/home/menu') return
   const parentId = route.query.id ? Number(route.query.id) : null
-  // 已缓存则直接渲染，无 loading
   const cached = await fetchMenus(parentId).catch(() => [])
   if (menus.value !== cached) {
     loading.value = menus.value.length === 0
     menus.value = cached
     loading.value = false
   }
-  // 后台预加载每个子项的下一级
+
   cached.forEach((item) => {
     if (!item.url) preloadMenus(item.id)
   })
@@ -30,15 +40,20 @@ onMounted(() => {
   loadMenus()
 })
 
-watch(() => route.query.id, () => {
-  loadMenus()
-})
+watch(
+  () => [route.path, route.query.id],
+  () => {
+    if (route.path !== '/home/menu') return
+    loadMenus()
+  },
+)
 
 const goAction = async (item) => {
   if (item.url) {
     router.push(item.url.trim().replace(/_/g, '-'))
     return
   }
+
   const children = await fetchMenus(item.id).catch(() => [])
   if (children.length === 0) {
     showToast('未找到相关功能')
@@ -50,26 +65,63 @@ const goAction = async (item) => {
 
 <template>
   <div class="menu-page">
-    <van-loading v-if="loading" class="page-loading" color="#2563eb" />
-    <template v-else-if="menus.length">
-      <div class="tool-grid">
-        <div v-for="item in menus" :key="item.id" class="tool-item" @click="goAction(item)">
-          <div class="tool-icon">
-            <van-icon :name="item.icon" />
+    <van-nav-bar
+      :title="navTitle"
+      left-arrow
+      fixed
+      placeholder
+      @click-left="onClickLeft"
+    />
+
+    <div class="menu-body">
+      <van-loading v-if="loading" class="page-loading" color="#2563eb" />
+      <template v-else-if="menus.length">
+        <div class="tool-grid">
+          <div v-for="item in menus" :key="item.id" class="tool-item" @click="goAction(item)">
+            <div class="tool-icon">
+              <van-icon :name="item.icon" />
+            </div>
+            <span>{{ item.text }}</span>
           </div>
-          <span>{{ item.text }}</span>
         </div>
-      </div>
-    </template>
-    <van-empty v-else description="暂无菜单" />
+      </template>
+      <van-empty v-else description="暂无菜单" />
+    </div>
   </div>
 </template>
 
 <style scoped>
 .menu-page {
   min-height: 100%;
-  padding: 12px;
   background: #f7f8fa;
+}
+
+.menu-page :deep(.van-nav-bar) {
+  background: #f7f8fa;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.menu-page :deep(.van-nav-bar__content) {
+  background: #f7f8fa;
+}
+
+.menu-page :deep(.van-nav-bar::after) {
+  border: 0;
+}
+
+.menu-page :deep(.van-nav-bar__title) {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.menu-page :deep(.van-icon-arrow-left) {
+  color: #334155;
+}
+
+.menu-body {
+  padding: 12px;
 }
 
 .page-loading {

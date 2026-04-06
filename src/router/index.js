@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+﻿import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 
 const publicRoutes = new Set(['login', '404'])
@@ -76,6 +76,15 @@ const routes = [
     name: 'HomeOrder',
     title: '订单管理',
     component: () => import('@/views/home/order/index.vue'),
+    meta: {
+      stableKeyByPath: true,
+    },
+  }),
+  defineRoute({
+    path: '/home/order/search',
+    name: 'HomeOrderSearch',
+    title: '订单搜索',
+    component: () => import('@/views/home/order/search/index.vue'),
   }),
   defineRoute({
     path: '/home/order/create',
@@ -235,3 +244,4 @@ router.beforeEach((to, _from, next) => {
 })
 
 export default router
+

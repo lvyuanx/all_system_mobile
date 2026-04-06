@@ -77,6 +77,14 @@ export const getPayMethodTypeList = (config = {}) => {
   return http.get('/mobile/order/pay/pay_method_type_all_list/', {}, config)
 }
 
+export const getOrderPayStatusList = (config = {}) => {
+  return http.get('/mobile/order/meta/pay_status_all_list/', {}, config)
+}
+
+export const getOrderShipStatusList = (config = {}) => {
+  return http.get('/mobile/order/meta/ship_status_all_list/', {}, config)
+}
+
 export const getOrderPayCaList = (orderId, config = {}) => {
   return http.get('/mobile/order/pay/ca_list/', { oid: orderId }, config)
 }

@@ -1,13 +1,21 @@
 ﻿<script setup>
 defineOptions({ name: 'OrderIndex' })
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
-import { getOrderList } from '@/api/order'
+import {
+  getOrderList,
+  getOrderPayStatusList,
+  getOrderShipStatusList,
+  getOrderTypeList,
+} from '@/api/order'
 import { ORDER_STATUS, formatMoney } from '@/utils/orderConstants'
+import AppSearchNavBar from '@/components/AppSearchNavBar.vue'
+import { useOrderSearchStore } from '@/stores/orderSearch'
 
 const router = useRouter()
 const route = useRoute()
+const orderSearchStore = useOrderSearchStore()
 
 const search = ref('')
 
@@ -16,8 +24,18 @@ const loading = ref(false)
 const requesting = ref(false)
 const finished = ref(false)
 const refreshing = ref(false)
-const showCalendar = ref(false)
-const dateRange = ref(null)
+const showFilterPanel = ref(false)
+const showDatePicker = ref(false)
+const activeDateField = ref('start')
+const selectedQuickRange = ref('')
+const dateStart = ref(null)
+const dateEnd = ref(null)
+const orderTypeOptions = ref([])
+const payStatusOptions = ref([])
+const shipStatusOptions = ref([])
+const selectedOrderTypes = ref([])
+const selectedPayStatuses = ref([])
+const selectedShipStatuses = ref([])
 const page = ref(1)
 const PAGE_SIZE = 12
 
@@ -32,6 +50,7 @@ const statusFilter = computed(() => {
 
 const showCreate = computed(() => statusFilter.value === ORDER_STATUS.CREATED)
 const listStatusContext = computed(() => (statusFilter.value === null ? 'all' : String(statusFilter.value)))
+const routeKeyword = computed(() => String(route.query.keyword || ''))
 
 const resetList = () => {
   list.value = []
@@ -46,24 +65,36 @@ const buildFilter = () => {
   if (statusFilter.value !== null) {
     filter.order_status = [statusFilter.value]
   }
-  if (dateRange.value?.length === 2) {
-    filter.create_time_start = toTimestamp(dateRange.value[0], false)
-    filter.create_time_end = toTimestamp(dateRange.value[1], true)
+  if (dateStart.value) {
+    filter.create_time_start = toTimestamp(dateStart.value, false)
+  }
+  if (dateEnd.value) {
+    filter.create_time_end = toTimestamp(dateEnd.value, true)
+  }
+  if (selectedOrderTypes.value.length) {
+    filter.order_type = selectedOrderTypes.value
+  }
+  if (selectedPayStatuses.value.length) {
+    filter.pay_status = selectedPayStatuses.value
+  }
+  if (selectedShipStatuses.value.length) {
+    filter.ship_status = selectedShipStatuses.value
   }
   return filter
 }
 
-const loadMore = async () => {
+const loadMore = async (options = {}) => {
+  const { silent = false } = options
   if (finished.value) {
-    loading.value = false
+    if (!silent) loading.value = false
     return
   }
   if (requesting.value) {
-    loading.value = false
+    if (!silent) loading.value = false
     return
   }
   requesting.value = true
-  loading.value = true
+  if (!silent) loading.value = true
   try {
     const res = await getOrderList(
       {
@@ -91,36 +122,50 @@ const loadMore = async () => {
     showToast('订单加载失败')
   } finally {
     requesting.value = false
-    loading.value = false
+    if (!silent) loading.value = false
   }
 }
 
 watch(
-  () => route.query.status,
+  () => [route.query.status, route.query.keyword],
   () => {
+    search.value = routeKeyword.value
     resetList()
     loadMore()
   },
 )
 
-const onSearch = () => {
-  resetList()
-  loadMore()
+const goSearchPage = () => {
+  router.push({
+    path: '/home/order/search',
+    query: search.value ? { keyword: search.value } : {},
+  })
 }
 
-const onClear = () => {
+const onClear = async () => {
   search.value = ''
+  // 使用 router.replace 保持 vue-router 状态一致，避免返回后恢复旧关键词
+  if (route.query.keyword !== undefined) {
+    const { keyword: _keyword, ...restQuery } = route.query
+    await router.replace({
+      path: route.path,
+      query: restQuery,
+    })
+    return
+  }
+
   resetList()
   loadMore()
 }
 
-const formatDate = (date) => {
-  if (!date) return ''
-  const d = new Date(date)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+const consumePendingKeyword = () => {
+  const pending = orderSearchStore.takePendingKeyword()
+  if (pending === null) return false
+
+  search.value = pending
+  resetList()
+  loadMore()
+  return true
 }
 
 const toTimestamp = (date, isEnd) => {
@@ -134,40 +179,109 @@ const toTimestamp = (date, isEnd) => {
   return Math.floor(d.getTime() / 1000)
 }
 
-const dateRangeText = computed(() => {
-  if (!dateRange.value?.length) return ''
-  const [start, end] = dateRange.value
-  return `${formatDate(start)} ~ ${formatDate(end)}`
-})
+const openDatePicker = (field) => {
+  selectedQuickRange.value = ''
+  activeDateField.value = field
+  showDatePicker.value = true
+}
 
-const onConfirmRange = (value) => {
-  let start = null
-  let end = null
-  if (Array.isArray(value)) {
-    ;[start, end] = value
-  } else if (value?.start && value?.end) {
-    start = value.start
-    end = value.end
+const onConfirmDate = (value) => {
+  if (activeDateField.value === 'start') {
+    dateStart.value = value
+    if (dateEnd.value && value > dateEnd.value) {
+      dateEnd.value = value
+    }
+  } else {
+    dateEnd.value = value
+    if (dateStart.value && value < dateStart.value) {
+      dateStart.value = value
+    }
   }
-  if (start && end) {
-    dateRange.value = [start, end]
-  }
-  showCalendar.value = false
+  showDatePicker.value = false
+}
+
+const clearFilters = () => {
+  selectedQuickRange.value = ''
+  dateStart.value = null
+  dateEnd.value = null
+  selectedOrderTypes.value = []
+  selectedPayStatuses.value = []
+  selectedShipStatuses.value = []
+}
+
+const applyFilters = () => {
+  showFilterPanel.value = false
   resetList()
   loadMore()
 }
 
-const clearDateRange = () => {
-  dateRange.value = null
-  resetList()
-  loadMore()
+const toggleOrderType = (value) => {
+  const index = selectedOrderTypes.value.indexOf(value)
+  if (index >= 0) {
+    selectedOrderTypes.value.splice(index, 1)
+  } else {
+    selectedOrderTypes.value.push(value)
+  }
+}
+
+const togglePayStatus = (value) => {
+  const index = selectedPayStatuses.value.indexOf(value)
+  if (index >= 0) {
+    selectedPayStatuses.value.splice(index, 1)
+  } else {
+    selectedPayStatuses.value.push(value)
+  }
+}
+
+const toggleShipStatus = (value) => {
+  const index = selectedShipStatuses.value.indexOf(value)
+  if (index >= 0) {
+    selectedShipStatuses.value.splice(index, 1)
+  } else {
+    selectedShipStatuses.value.push(value)
+  }
+}
+
+const formatDate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+const startDateText = computed(() => (dateStart.value ? formatDate(dateStart.value) : '选择起始时间'))
+const endDateText = computed(() => (dateEnd.value ? formatDate(dateEnd.value) : '选择终止时间'))
+
+const currentYear = new Date().getFullYear()
+const quickRanges = computed(() => [
+  { key: 'last_month', label: '近一个月', months: 1 },
+  { key: 'this_year', label: String(currentYear), year: currentYear },
+  { key: 'last_year', label: String(currentYear - 1), year: currentYear - 1 },
+])
+
+const applyQuickRange = (range) => {
+  selectedQuickRange.value = range.key
+  const now = new Date()
+  if (range.months) {
+    dateEnd.value = now
+    const start = new Date(now)
+    start.setMonth(start.getMonth() - range.months)
+    dateStart.value = start
+    return
+  }
+  if (range.year) {
+    dateStart.value = new Date(range.year, 0, 1)
+    dateEnd.value = new Date(range.year, 11, 31, 23, 59, 59)
+  }
 }
 
 const onRefresh = async () => {
   refreshing.value = true
   resetList()
   try {
-    await loadMore()
+    await loadMore({ silent: true })
   } finally {
     refreshing.value = false
   }
@@ -182,6 +296,92 @@ const goDetail = (order) => {
 
 const goCreate = () => {
   router.push({ path: '/home/order/create', query: { name: '新建订单' } })
+}
+
+const onNavBack = () => {
+  const hasBack = Boolean(window.history.state?.back)
+  if (hasBack) {
+    router.back()
+    return
+  }
+  router.replace('/home')
+}
+
+const onCardAction = (action, order) => {
+  if (action === 'pay') {
+    router.push({
+      path: '/home/order/pay',
+      query: { id: order.order_id, name: '订单收款', list_status: listStatusContext.value },
+    })
+    return
+  }
+  if (action === 'detail') {
+    goDetail(order)
+    return
+  }
+  if (action === 'contact') {
+    showToast('联系客户功能开发中')
+    return
+  }
+}
+
+const fetchOrderTypes = async () => {
+  try {
+    const res = await getOrderTypeList({ loading: false })
+    const list = Array.isArray(res?.data) ? res.data : []
+    orderTypeOptions.value = list.map((item) => ({
+      label: item.label || item.name,
+      value: Number(item.value),
+    }))
+    if (orderTypeOptions.value.length) return
+  } catch {
+    // ignore, use fallback below
+  }
+
+  orderTypeOptions.value = [
+    { label: '客户订单', value: 1 },
+    { label: '同行转单', value: 2 },
+  ]
+}
+
+const fetchPayStatusOptions = async () => {
+  try {
+    const res = await getOrderPayStatusList({ loading: false })
+    const list = Array.isArray(res?.data) ? res.data : []
+    payStatusOptions.value = list.map((item) => ({
+      label: item.label || item.name,
+      value: Number(item.value),
+    }))
+    if (payStatusOptions.value.length) return
+  } catch {
+    // ignore, use fallback below
+  }
+
+  payStatusOptions.value = [
+    { label: '未支付', value: 1 },
+    { label: '部分支付', value: 2 },
+    { label: '全部支付', value: 99 },
+  ]
+}
+
+const fetchShipStatusOptions = async () => {
+  try {
+    const res = await getOrderShipStatusList({ loading: false })
+    const list = Array.isArray(res?.data) ? res.data : []
+    shipStatusOptions.value = list.map((item) => ({
+      label: item.label || item.name,
+      value: Number(item.value),
+    }))
+    if (shipStatusOptions.value.length) return
+  } catch {
+    // ignore, use fallback below
+  }
+
+  shipStatusOptions.value = [
+    { label: '未发货', value: 1 },
+    { label: '部分发货', value: 2 },
+    { label: '全部发货', value: 99 },
+  ]
 }
 
 const statusClass = (status) => {
@@ -207,36 +407,160 @@ const statusClass = (status) => {
   }
 }
 
+const cardTitle = (order) => {
+  return order.receiver_company || `订单 ${order.order_no || ''}`
+}
+
+const cardDesc = (order) => {
+  const name = order.receiver_name || '-'
+  const phone = order.receiver_phone || '-'
+  return `${name} / ${phone}`
+}
+
+const primaryActionText = (status) => {
+  switch (Number(status)) {
+    case ORDER_STATUS.CREATED:
+      return '去收款'
+    case ORDER_STATUS.CONFIRMED:
+      return '去排产'
+    case ORDER_STATUS.SCHEDULED:
+    case ORDER_STATUS.PRODUCING:
+      return '去发货'
+    case ORDER_STATUS.FINISHED:
+      return '去完工'
+    case ORDER_STATUS.SHIPPED:
+      return '查看物流'
+    case ORDER_STATUS.COMPLETED:
+      return '再次下单'
+    default:
+      return '查看详情'
+  }
+}
+
 onMounted(() => {
+  if (consumePendingKeyword()) {
+    fetchOrderTypes()
+    fetchPayStatusOptions()
+    fetchShipStatusOptions()
+    return
+  }
+  search.value = routeKeyword.value
+  fetchOrderTypes()
+  fetchPayStatusOptions()
+  fetchShipStatusOptions()
   loadMore()
+})
+
+onActivated(() => {
+  consumePendingKeyword()
 })
 </script>
 
 <template>
   <div class="page">
     <div class="search-wrap">
-      <div class="search-inner">
-        <van-icon name="search" class="search-icon" />
-        <input
-          v-model="search"
-          class="search-input"
-          placeholder="搜索订单号 / 收货人 / 电话"
-          @keyup.enter="onSearch"
-        />
-        <button v-if="search" class="clear-btn" @click="onClear">
-          <van-icon name="cross" size="14" />
-        </button>
-        <button class="search-btn" @click="onSearch">搜索</button>
-        <button v-if="showCreate" class="create-btn" @click="goCreate">新建</button>
-      </div>
-      <div class="filter-row">
-        <div class="filter-chip" @click="showCalendar = true">
-          <van-icon name="clock-o" />
-          <span>{{ dateRangeText || '创建时间范围' }}</span>
-        </div>
-        <button v-if="dateRangeText" class="clear-filter" @click="clearDateRange">清除</button>
-      </div>
+      <AppSearchNavBar
+        v-model="search"
+        placeholder="搜索订单号 / 收货人 / 电话"
+        :show-back="true"
+        :readonly="true"
+        @click-left="onNavBack"
+        @clear="onClear"
+        @click-input="goSearchPage"
+      >
+        <template #right>
+          <button type="button" class="nav-action" @click="showFilterPanel = true">
+            <van-icon name="filter-o" size="16" />
+            <span>筛选</span>
+          </button>
+          <button v-if="showCreate" type="button" class="nav-action nav-action-primary" @click="goCreate">
+            <van-icon name="plus" size="16" />
+            <span>新建</span>
+          </button>
+        </template>
+      </AppSearchNavBar>
     </div>
+
+    <van-popup
+      v-model:show="showFilterPanel"
+      position="top"
+      round
+      class="filter-popup"
+    >
+      <div class="filter-section">
+        <div class="filter-title">按时间选择</div>
+        <div class="chip-grid">
+          <button
+            v-for="item in quickRanges"
+            :key="item.label"
+            type="button"
+            class="filter-chip-btn"
+            :class="{ active: selectedQuickRange === item.key }"
+            @click="applyQuickRange(item)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+        <div class="date-grid">
+          <button type="button" class="date-btn" @click="openDatePicker('start')">{{ startDateText }}</button>
+          <span class="date-sep">—</span>
+          <button type="button" class="date-btn" @click="openDatePicker('end')">{{ endDateText }}</button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">按服务选择</div>
+        <div class="chip-grid">
+          <button
+            v-for="item in orderTypeOptions"
+            :key="item.value"
+            type="button"
+            class="filter-chip-btn"
+            :class="{ active: selectedOrderTypes.includes(item.value) }"
+            @click="toggleOrderType(item.value)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">按支付状态</div>
+        <div class="chip-grid">
+          <button
+            v-for="item in payStatusOptions"
+            :key="item.value"
+            type="button"
+            class="filter-chip-btn"
+            :class="{ active: selectedPayStatuses.includes(item.value) }"
+            @click="togglePayStatus(item.value)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">按发货状态</div>
+        <div class="chip-grid">
+          <button
+            v-for="item in shipStatusOptions"
+            :key="item.value"
+            type="button"
+            class="filter-chip-btn"
+            :class="{ active: selectedShipStatuses.includes(item.value) }"
+            @click="toggleShipStatus(item.value)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" class="panel-btn panel-btn-ghost" @click="clearFilters">清空</button>
+        <button type="button" class="panel-btn panel-btn-primary" @click="applyFilters">确定</button>
+      </div>
+    </van-popup>
 
     <van-pull-refresh v-model="refreshing" class="refresh-wrap" @refresh="onRefresh">
       <van-list
@@ -252,36 +576,43 @@ onMounted(() => {
           class="order-card"
           @click="goDetail(order)"
         >
-          <div class="card-header">
-            <div class="order-no">{{ order.order_no }}</div>
-            <span class="status-badge" :class="statusClass(order.order_status)">
-              {{ order.order_status_str || '-' }}
-            </span>
+          <div class="card-top">
+            <div class="shop-line">
+              <van-icon name="shop-o" size="14" />
+              <span class="shop-name text-ellipsis">{{ cardTitle(order) }}</span>
+              <van-icon name="arrow" size="12" class="shop-arrow" />
+            </div>
+            <span class="top-status" :class="statusClass(order.order_status)">{{ order.order_status_str || '-' }}</span>
           </div>
-          <div class="card-body">
-            <div class="row">
-              <span class="label">收货人</span>
-              <span class="value">{{ order.receiver_name || '-' }}</span>
+
+          <div class="card-main">
+            <div class="thumb-wrap">
+              <img
+                v-if="order.main_image"
+                :src="order.main_image"
+                alt="订单主图"
+                class="thumb-image"
+              />
+              <div v-else class="thumb-placeholder">暂无主图</div>
             </div>
-            <div class="row">
-              <span class="label">电话</span>
-              <span class="value">{{ order.receiver_phone || '-' }}</span>
+            <div class="card-content">
+              <div class="goods-title text-ellipsis">
+                订单号：{{ order.order_no || '-' }}
+              </div>
+              <div class="goods-desc text-ellipsis">{{ cardDesc(order) }}</div>
+              <div class="goods-time">下单：{{ order.create_time_str || '-' }}</div>
             </div>
-            <div class="row">
-              <span class="label">公司</span>
-              <span class="value">{{ order.receiver_company || '-' }}</span>
-            </div>
-            <div class="row">
-              <span class="label">创建</span>
-              <span class="value">{{ order.create_time_str || '-' }}</span>
+            <div class="price-wrap">
+              <div class="amount">￥{{ formatMoney(order.payable_amount) }}</div>
             </div>
           </div>
-          <div class="card-footer">
-            <div class="tag-group">
-              <span class="meta-tag pay">{{ order.pay_status_str || '-' }}</span>
-              <span class="meta-tag ship">{{ order.ship_status_str || '-' }}</span>
-            </div>
-            <div class="amount">￥{{ formatMoney(order.payable_amount) }}</div>
+
+          <div class="card-actions">
+            <button type="button" class="action-btn" @click.stop="onCardAction('detail', order)">更多</button>
+            <button type="button" class="action-btn" @click.stop="onCardAction('contact', order)">联系客户</button>
+            <button type="button" class="action-btn action-btn-primary" @click.stop="onCardAction('pay', order)">
+              {{ primaryActionText(order.order_status) }}
+            </button>
           </div>
         </div>
 
@@ -293,10 +624,10 @@ onMounted(() => {
       </van-list>
     </van-pull-refresh>
     <van-calendar
-      v-model:show="showCalendar"
-      type="range"
+      v-model:show="showDatePicker"
+      type="single"
       color="#2563eb"
-      @confirm="onConfirmRange"
+      @confirm="onConfirmDate"
     />
   </div>
 </template>
@@ -311,115 +642,114 @@ onMounted(() => {
   position: sticky;
   top: 0;
   z-index: 12;
-  padding: 10px 12px 8px;
   background: #f2f3f7;
 }
 
-.search-inner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 42px;
-  background: #fff;
-  border-radius: 20px;
-  padding: 0 10px 0 14px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-}
-
-.search-icon {
-  color: #bbb;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.search-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 13px;
-  color: #333;
-  background: transparent;
-  min-width: 0;
-}
-
-.search-input::placeholder {
-  color: #bbb;
-}
-
-.clear-btn {
+.nav-action {
   border: none;
   background: transparent;
-  padding: 4px;
-  color: #bbb;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-.search-btn {
-  border: none;
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 0 12px;
-  height: 28px;
-  border-radius: 14px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.create-btn {
-  border: none;
-  background: rgba(7, 193, 96, 0.12);
-  color: #07c160;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 0 12px;
-  height: 28px;
-  border-radius: 14px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.filter-row {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #fff;
-  font-size: 12px;
   color: #475569;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font-size: 10px;
+  padding: 0;
+  min-width: 32px;
+  height: 34px;
   cursor: pointer;
 }
 
-.filter-chip :deep(.van-icon) {
-  color: #64748b;
+.nav-action-primary {
+  color: #2563eb;
 }
 
-.clear-filter {
-  border: none;
-  background: rgba(239, 68, 68, 0.12);
-  color: #dc2626;
-  font-size: 12px;
+.filter-popup {
+  background: #f2f3f7;
+  padding: 10px 12px 14px;
+}
+
+.filter-section + .filter-section {
+  margin-top: 12px;
+}
+
+.filter-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
+.chip-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.filter-chip-btn {
+  border: 0;
+  background: #ffffff;
+  color: #374151;
+  height: 36px;
+  border-radius: 18px;
+  font-size: 13px;
+}
+
+.filter-chip-btn.active {
+  background: color-mix(in srgb, var(--color-primary) 16%, #ffffff);
+  color: var(--color-primary);
+}
+
+.date-grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.date-btn {
+  border: 0;
+  background: #ffffff;
+  color: #6b7280;
+  height: 36px;
+  border-radius: 18px;
+  font-size: 13px;
+}
+
+.date-sep {
+  color: #9ca3af;
+}
+
+.filter-actions {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.panel-btn {
+  border: 0;
+  height: 42px;
+  border-radius: 22px;
+  font-size: 18px;
   font-weight: 600;
-  padding: 6px 10px;
-  border-radius: 999px;
-  cursor: pointer;
+}
+
+.panel-btn-ghost {
+  background: color-mix(in srgb, var(--color-primary) 10%, #ffffff);
+  color: var(--color-primary);
+}
+
+.panel-btn-primary {
+  background: var(--color-primary);
+  color: #ffffff;
 }
 
 .list {
-  padding: 10px 12px 24px;
-  min-height: calc(100dvh - 160px);
+  padding: 8px 10px 20px;
+  min-height: calc(100dvh - 132px);
   display: flex;
   flex-direction: column;
 }
@@ -433,12 +763,85 @@ onMounted(() => {
 
 .order-card {
   background: #fff;
-  border-radius: 16px;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 8px;
+  border: 1px solid #eceff3;
+  box-shadow: none;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.shop-line {
+  min-width: 0;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.shop-name {
+  font-weight: 600;
+}
+
+.shop-arrow {
+  color: #9ca3af;
+}
+
+.top-status {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.card-main {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.thumb-wrap {
+  width: 66px;
+  height: 66px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+.thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.card-content {
+  min-width: 0;
+  flex: 1;
 }
 
 .order-card:active {
@@ -446,129 +849,120 @@ onMounted(() => {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
+.goods-title {
+  font-size: 13px;
+  color: #111827;
+  margin-bottom: 3px;
 }
 
-.order-no {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1f2a44;
-}
-
-.status-badge {
-  font-size: 11px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-}
-
-.status-created {
-  background: rgba(59, 130, 246, 0.12);
-  color: #2563eb;
-  border-color: rgba(59, 130, 246, 0.24);
-}
-
-.status-confirmed {
-  background: rgba(139, 92, 246, 0.12);
-  color: #7c3aed;
-  border-color: rgba(139, 92, 246, 0.24);
-}
-
-.status-scheduled {
-  background: rgba(14, 165, 233, 0.12);
-  color: #0284c7;
-  border-color: rgba(14, 165, 233, 0.24);
-}
-
-.status-producing {
-  background: rgba(245, 158, 11, 0.12);
-  color: #d97706;
-  border-color: rgba(245, 158, 11, 0.24);
-}
-
-.status-finished {
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-  border-color: rgba(16, 185, 129, 0.24);
-}
-
-.status-shipped {
-  background: rgba(20, 184, 166, 0.12);
-  color: #0f766e;
-  border-color: rgba(20, 184, 166, 0.24);
-}
-
-.status-completed {
-  background: rgba(15, 23, 42, 0.08);
-  color: #0f172a;
-  border-color: rgba(15, 23, 42, 0.18);
-}
-
-.status-canceled {
-  background: rgba(148, 163, 184, 0.2);
-  color: #64748b;
-  border-color: rgba(148, 163, 184, 0.32);
-}
-
-.card-body {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
+.goods-desc {
   font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 2px;
 }
 
-.label {
-  color: rgba(31, 42, 68, 0.55);
+.goods-time {
+  font-size: 12px;
+  color: #6b7280;
 }
 
-.value {
-  color: #1f2a44;
-  font-weight: 600;
+.price-wrap {
+  flex-shrink: 0;
   text-align: right;
-  flex: 1;
-  word-break: break-all;
+  min-width: 74px;
 }
 
-.card-footer {
+.card-actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.tag-group {
-  display: flex;
+  justify-content: flex-end;
   gap: 6px;
-  flex-wrap: wrap;
 }
 
-.meta-tag {
-  font-size: 10px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: #f1f5ff;
-  color: #4f46e5;
+.action-btn {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #4b5563;
+  font-size: 12px;
+  border-radius: 12px;
+  height: 26px;
+  padding: 0 10px;
 }
 
-.meta-tag.ship {
-  background: #ecfeff;
-  color: #0ea5e9;
+.action-btn-primary {
+  border-color: #fb923c;
+  color: #ea580c;
+  background: #fff7ed;
 }
 
 .amount {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1f2a44;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.top-status.status-created,
+.top-status.status-confirmed,
+.top-status.status-scheduled,
+.top-status.status-producing,
+.top-status.status-finished,
+.top-status.status-shipped,
+.top-status.status-completed,
+.top-status.status-canceled {
+  background: transparent;
+  border: 0;
+}
+
+.top-status.status-created {
+  color: #2563eb;
+}
+
+.top-status.status-confirmed {
+  color: #7c3aed;
+}
+
+.top-status.status-scheduled {
+  color: #0284c7;
+}
+
+.top-status.status-producing {
+  color: #d97706;
+}
+
+.top-status.status-finished {
+  color: #059669;
+}
+
+.top-status.status-shipped {
+  color: #0f766e;
+}
+
+.top-status.status-completed {
+  color: #0f172a;
+}
+
+.top-status.status-canceled {
+  color: #64748b;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .thumb-wrap {
+    width: 66px;
+    height: 66px;
+  }
+
+  .action-btn {
+    padding: 0 10px;
+  }
 }
 </style>
