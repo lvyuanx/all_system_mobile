@@ -235,6 +235,11 @@ const onClickLeft = () => {
   router.replace('/home/order')
 }
 
+const goClientList = (company) => {
+  if (!company) return
+  router.push({ path: '/home/client', query: { keyword: company } })
+}
+
 const goPatternDetail = (item) => {
   if (!item.pattern_code && !item.pattern_id) return
   router.push({
@@ -468,7 +473,7 @@ onUnmounted(() => {
             <div class="address-tag receiver-tag">收</div>
             <div class="address-body">
               <div class="address-name">{{ detail.receiver_name || '-' }}</div>
-              <div class="address-sub">{{ detail.receiver_company || '-' }}</div>
+              <div class="address-sub address-sub--link" @click="goClientList(detail.receiver_company)">{{ detail.receiver_company || '-' }}</div>
               <div class="address-sub">
                 <van-icon name="phone-o" size="12" />
                 {{ detail.receiver_phone || '-' }}
@@ -1043,6 +1048,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.address-sub--link {
+  color: var(--c-primary);
+  cursor: pointer;
 }
 
 .addr-text {

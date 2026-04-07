@@ -20,7 +20,7 @@ const workAge = computed(() => {
 
 const menuList = [
   { icon: 'contact-o', text: '个人信息', path: '/profile/info' },
-  { icon: 'info-o', text: '关于我们', path: '/profile/password' },
+  { icon: 'lock', text: '密码修改', path: '/profile/password' },
 ]
 
 const settingsList = [

@@ -334,9 +334,22 @@ const onCardAction = (action, order) => {
     return
   }
   if (action === 'contact') {
-    showToast('联系客户功能开发中')
+    if (order.receiver_client_id) {
+      router.push({
+        path: '/home/client/detail',
+        query: { client_id: order.receiver_client_id, name: order.receiver_company || '客户详情' },
+      })
+    } else {
+      showToast('未找到关联客户')
+    }
     return
   }
+}
+
+const goClientByCompany = (order) => {
+  const company = order.receiver_company
+  if (!company) return
+  router.push({ path: '/home/client', query: { company_name: company } })
 }
 
 const fetchOrderTypes = async () => {
@@ -426,25 +439,7 @@ const cardTitle = (order) => {
 }
 
 
-const primaryActionText = (status) => {
-  switch (Number(status)) {
-    case ORDER_STATUS.CREATED:
-      return '去收款'
-    case ORDER_STATUS.CONFIRMED:
-      return '去排产'
-    case ORDER_STATUS.SCHEDULED:
-    case ORDER_STATUS.PRODUCING:
-      return '去发货'
-    case ORDER_STATUS.FINISHED:
-      return '去完工'
-    case ORDER_STATUS.SHIPPED:
-      return '查看物流'
-    case ORDER_STATUS.COMPLETED:
-      return '再次下单'
-    default:
-      return '查看详情'
-  }
-}
+
 
 onMounted(() => {
   if (consumePendingKeyword()) {
@@ -587,7 +582,10 @@ onActivated(() => {
         >
           <div class="card-top">
             <div class="shop-line">
-              <span class="shop-name text-ellipsis">{{ cardTitle(order) }}</span>
+              <span
+                class="shop-name text-ellipsis"
+                @click.stop="goClientByCompany(order)"
+              >{{ cardTitle(order) }}</span>
               <van-icon name="arrow" size="11" class="shop-arrow" />
             </div>
             <span class="top-status" :class="statusClass(order.order_status)">{{ order.order_status_str || '-' }}</span>
@@ -616,9 +614,6 @@ onActivated(() => {
             <span class="card-time">{{ order.create_time_str || '-' }}</span>
             <div class="card-actions">
               <button type="button" class="action-btn" @click.stop="onCardAction('contact', order)">联系客户</button>
-              <button type="button" class="action-btn action-btn-primary" @click.stop="onCardAction('pay', order)">
-                {{ primaryActionText(order.order_status) }}
-              </button>
             </div>
           </div>
         </div>
@@ -802,6 +797,10 @@ onActivated(() => {
   font-size: 14px;
   font-weight: 600;
   color: #111827;
+}
+
+.shop-name {
+  cursor: pointer;
 }
 
 .shop-arrow {

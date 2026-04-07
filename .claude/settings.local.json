@@ -1,10 +1,12 @@
 {
   "permissions": {
-    "additionalDirectories": [
-      "D:\\projects\\all_system\\pattern_library\\views"
-    ],
     "allow": [
-      "Read(//d/projects/all_system/order/**)"
+      "Read(//d/projects/all_system/order/**)",
+      "Read(//d/projects/all_system/**)"
+    ],
+    "additionalDirectories": [
+      "D:\\projects\\all_system\\pattern_library\\views",
+      "D:\\projects\\all_system\\order\\views"
     ]
   }
 }

@@ -106,7 +106,7 @@ router.afterEach(() => {
 
 const cachedComponents = computed(() => {
   // level > 1 鐨勯潪鍔ㄦ€侀〉闈㈤兘缂撳瓨锛宮enu 椤靛洜 query 鍙樺寲鐢?watch 鍒锋柊锛屼篃缂撳瓨
-  return ['HomeIndex', 'HomeMenu']
+  return ['HomeIndex', 'HomeMenu', 'ClientList']
 })
 
 const onTabChange = (name) => {

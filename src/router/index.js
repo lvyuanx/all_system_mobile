@@ -176,6 +176,39 @@ const routes = [
     },
   }),
   defineRoute({
+    path: '/home/client',
+    name: 'HomeClient',
+    title: '客户管理',
+    component: () => import('@/views/home/client/index.vue'),
+    meta: {
+      index: 11,
+      showNavBar: false,
+      navBarBackground: '#f2f3f7',
+      keepAlive: true,
+    },
+  }),
+  defineRoute({
+    path: '/home/client/search',
+    name: 'HomeClientSearch',
+    title: '客户搜索',
+    component: () => import('@/views/home/client/search/index.vue'),
+    meta: {
+      index: 111,
+      navBarBackground: '#f2f3f7',
+    },
+  }),
+  defineRoute({
+    path: '/home/client/detail',
+    name: 'HomeClientDetail',
+    title: '客户详情',
+    component: () => import('@/views/home/client/detail/index.vue'),
+    meta: {
+      index: 111,
+      showNavBar: false,
+      navBarBackground: '#f4f6fb',
+    },
+  }),
+  defineRoute({
     path: '/home/pattern-library',
     name: 'HomePatternLibrary',
     title: '样板库',
@@ -257,6 +290,7 @@ const routes = [
     component: () => import('@/views/profile/password/index.vue'),
     meta: {
       index: 11,
+      navBarBackground: '#f3f4f6',
     },
   }),
   defineRoute({
@@ -321,4 +355,3 @@ router.beforeEach((to, _from, next) => {
 })
 
 export default router
-
