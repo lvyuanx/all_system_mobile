@@ -1,7 +1,7 @@
 <script setup>
 defineOptions({ name: 'OrderDetail' })
 
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import {
@@ -230,11 +230,46 @@ const goPatternDetail = (item) => {
   })
 }
 
-onMounted(fetchDetail)
+const pageRef = ref(null)
+const isCollapsed = ref(false)
+let lastScrollTop = 0
+let rafId = null
+const THRESHOLD = 8
+
+const onScroll = () => {
+  if (rafId) return
+  rafId = requestAnimationFrame(() => {
+    rafId = null
+    const el = pageRef.value
+    if (!el) return
+    const current = el.scrollTop
+    const delta = current - lastScrollTop
+    if (current <= 0) {
+      isCollapsed.value = false
+    } else if (delta > THRESHOLD) {
+      isCollapsed.value = true
+    } else if (delta < -THRESHOLD) {
+      isCollapsed.value = false
+    }
+    lastScrollTop = current
+  })
+}
+
+const navOrderNoVisible = isCollapsed
+
+onMounted(() => {
+  fetchDetail()
+  pageRef.value?.addEventListener('scroll', onScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  pageRef.value?.removeEventListener('scroll', onScroll)
+  if (rafId) cancelAnimationFrame(rafId)
+})
 </script>
 
 <template>
-  <div class="page">
+  <div ref="pageRef" class="page">
     <!-- 顶部合并头部：返回 + 状态 -->
     <div class="sticky-header" :class="statusConfig.cls || 'status-default'">
       <div class="header-nav">
@@ -242,10 +277,12 @@ onMounted(fetchDetail)
           <van-icon name="arrow-left" size="20" />
         </button>
         <div class="header-title">{{ navTitle }}</div>
-        <div class="header-right" />
+        <div class="header-nav-order-no" :class="{ visible: navOrderNoVisible }">
+          {{ detail?.order_no || '' }}
+        </div>
       </div>
 
-      <div class="header-status">
+      <div class="header-status" :class="{ collapsed: isCollapsed }">
         <template v-if="detail">
           <van-icon :name="statusConfig.icon" class="status-icon" />
           <div class="status-info">
@@ -532,6 +569,8 @@ onMounted(fetchDetail)
   --shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
 
   min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
   background: var(--c-bg);
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
@@ -594,6 +633,25 @@ onMounted(fetchDetail)
   align-items: center;
 }
 
+.header-nav-order-no {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  padding-right: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.header-nav-order-no.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .header-status {
   display: flex;
   align-items: center;
@@ -601,6 +659,17 @@ onMounted(fetchDetail)
   padding: 2px 16px 16px;
   position: relative;
   z-index: 1;
+  max-height: 100px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+}
+
+.header-status.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .status-icon {
