@@ -61,6 +61,10 @@ export const payOrder = (payload, config = {}) => {
   return http.post('/mobile/order/order/pay/', payload, config)
 }
 
+export const getOrderStatusFlow = (config = {}) => {
+  return http.get('/mobile/order/meta/status_flow/', {}, config)
+}
+
 export const getOrderTimeline = (orderId, config = {}) => {
   return http.get('/mobile/order/order/timeline/', { order_id: orderId }, config)
 }

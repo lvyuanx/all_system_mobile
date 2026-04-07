@@ -1,6 +1,7 @@
-<script setup>
-import { onMounted, ref } from 'vue'
+﻿<script setup>
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { showToast } from 'vant'
 
 const route = useRoute()
 
@@ -10,19 +11,44 @@ const product = ref({
   price: '199.00',
   originalPrice: '299.00',
   image: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg',
-  desc: '这是一款优质商品，采用优质材料制作，做工精细，性价比高。',
+  desc: '这是一款优质商品，采用高品质材料制作，做工精细，性价比高。',
   stock: 100,
   sales: 1000,
 })
 
 const showSku = ref(false)
 
+const operationLogs = ref([
+  {
+    title: '创建订单',
+    time: '2026-04-03 01:25:37',
+    operator: '系统',
+    desc: '订单已创建，等待支付。',
+  },
+  {
+    title: '支付确认',
+    time: '2026-04-03 01:30:12',
+    operator: '财务',
+    desc: '支付状态更新为待审核。',
+  },
+  {
+    title: '审核通过',
+    time: '2026-04-03 01:36:40',
+    operator: '管理员',
+    desc: '订单进入生产流程。',
+  },
+])
+
+const activeLogIndex = computed(() =>
+  operationLogs.value.length ? operationLogs.value.length - 1 : 0,
+)
+
 const onAddCart = () => {
-  vant.showToast('已加入购物车')
+  showToast('已加入购物车')
 }
 
 const onBuyNow = () => {
-  vant.showToast('跳转结算页面')
+  showToast('跳转结算页面')
 }
 
 onMounted(() => {
@@ -45,8 +71,8 @@ onMounted(() => {
       <van-cell :title="product.title" :border="false">
         <template #label>
           <div class="price-section">
-            <span class="current-price">¥{{ product.price }}</span>
-            <span class="original-price">¥{{ product.originalPrice }}</span>
+            <span class="current-price">￥{{ product.price }}</span>
+            <span class="original-price">￥{{ product.originalPrice }}</span>
           </div>
           <div class="sales-info">已售 {{ product.sales }} 件 · 库存 {{ product.stock }}</div>
         </template>
@@ -59,24 +85,15 @@ onMounted(() => {
       <van-cell title="规格" is-link @click="showSku = true" />
     </van-cell-group>
 
-    <van-cell-group inset class="comment-section">
-      <van-cell title="用户评价" value="查看全部" is-link />
-      <van-cell :border="false">
-        <template #title>
-          <div class="comment-item">
-            <van-image
-              round
-              width="32"
-              height="32"
-              src="https://fastly.jsdelivr.net/npm/@vant/assets/user.jpeg"
-            />
-            <div class="comment-content">
-              <div class="comment-user">用户A</div>
-              <div class="comment-text">商品质量很好，推荐购买！</div>
-            </div>
-          </div>
-        </template>
-      </van-cell>
+    <van-cell-group inset class="log-section">
+      <div class="log-title">操作日志</div>
+      <van-steps direction="vertical" :active="activeLogIndex" class="steps">
+        <van-step v-for="(item, idx) in operationLogs" :key="idx">
+          <div class="step-title">{{ item.title }}</div>
+          <div class="step-meta">{{ item.operator }} · {{ item.time }}</div>
+          <div class="step-desc">{{ item.desc }}</div>
+        </van-step>
+      </van-steps>
     </van-cell-group>
 
     <van-action-bar>
@@ -104,7 +121,7 @@ onMounted(() => {
 
 .product-info,
 .specs-section,
-.comment-section {
+.log-section {
   margin: 12px;
   background-color: var(--color-card);
 }
@@ -131,23 +148,40 @@ onMounted(() => {
   color: var(--color-text-light);
 }
 
-.comment-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.comment-content {
-  flex: 1;
-}
-
-.comment-user {
-  font-size: 14px;
+.log-title {
+  padding: 12px 16px 0;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 4px;
 }
 
-.comment-text {
+.steps {
+  padding: 8px 14px 14px;
+}
+
+.steps :deep(.van-step__title) {
+  color: var(--color-text);
+}
+
+.steps :deep(.van-step__circle) {
+  width: 8px;
+  height: 8px;
+}
+
+.step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.step-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--color-text-light);
+}
+
+.step-desc {
+  margin-top: 4px;
   font-size: 14px;
   color: var(--color-text-light);
   line-height: 1.5;

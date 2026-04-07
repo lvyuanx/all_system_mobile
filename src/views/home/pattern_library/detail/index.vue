@@ -190,6 +190,15 @@ const removeTag = (tag) => {
   if (idx > -1) form.value.tags.splice(idx, 1)
 }
 
+const onClickLeft = () => {
+  const hasBack = Boolean(window.history.state?.back)
+  if (hasBack) {
+    router.back()
+    return
+  }
+  router.replace('/home/pattern-library')
+}
+
 onMounted(loadDetail)
 </script>
 
@@ -211,10 +220,16 @@ onMounted(loadDetail)
           <van-icon name="photo-o" size="48" color="#ccc" />
           <span>暂无主图</span>
         </div>
+        <!-- 渐变遮罩 -->
+        <div class="hero-top-mask" />
+        <!-- 返回按钮 -->
+        <button class="float-back" @click.stop="onClickLeft">
+          <van-icon name="arrow-left" size="18" />
+        </button>
         <div v-if="detail.main_image" class="hero-mask">
           <van-icon name="eye-o" size="20" color="rgba(255,255,255,0.8)" />
         </div>
-        <!-- 状态角标 -->
+        <!-- 状态角标，移到右上角 -->
         <div class="status-badge" :class="detail.is_active ? 'active' : 'inactive'">
           {{ detail.is_active ? '已上架' : '已下架' }}
         </div>
@@ -358,6 +373,35 @@ onMounted(loadDetail)
   padding-bottom: 40px;
 }
 
+.float-back {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 12px;
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.hero-top-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.25), transparent);
+  pointer-events: none;
+}
+
 /* ── Hero 主图 ── */
 .hero {
   position: relative;
@@ -397,8 +441,8 @@ onMounted(loadDetail)
 
 .status-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 12px;
   font-size: 11px;
   font-weight: 600;
   padding: 3px 10px;

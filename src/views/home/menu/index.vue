@@ -1,6 +1,6 @@
 ﻿<script setup>
 defineOptions({ name: 'HomeMenu' })
-import { computed, ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { fetchMenus, preloadMenus } from '@/utils/menuCache'
@@ -10,16 +10,6 @@ const router = useRouter()
 
 const menus = ref([])
 const loading = ref(false)
-const navTitle = computed(() => route.query.name || '功能菜单')
-
-const onClickLeft = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) {
-    router.back()
-    return
-  }
-  router.replace('/home')
-}
 
 const loadMenus = async () => {
   if (route.path !== '/home/menu') return
@@ -65,14 +55,6 @@ const goAction = async (item) => {
 
 <template>
   <div class="menu-page">
-    <van-nav-bar
-      :title="navTitle"
-      left-arrow
-      fixed
-      placeholder
-      @click-left="onClickLeft"
-    />
-
     <div class="menu-body">
       <van-loading v-if="loading" class="page-loading" color="#2563eb" />
       <template v-else-if="menus.length">
@@ -94,30 +76,6 @@ const goAction = async (item) => {
 .menu-page {
   min-height: 100%;
   background: #f7f8fa;
-}
-
-.menu-page :deep(.van-nav-bar) {
-  background: #f7f8fa;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
-}
-
-.menu-page :deep(.van-nav-bar__content) {
-  background: #f7f8fa;
-}
-
-.menu-page :deep(.van-nav-bar::after) {
-  border: 0;
-}
-
-.menu-page :deep(.van-nav-bar__title) {
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.menu-page :deep(.van-icon-arrow-left) {
-  color: #334155;
 }
 
 .menu-body {

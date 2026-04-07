@@ -77,7 +77,8 @@ const onClickInput = () => {
   align-items: center;
   gap: 8px;
   padding: 10px 10px;
-  background: #f2f3f7;
+  padding-top: calc(10px + env(safe-area-inset-top));
+  background: var(--color-background);
 }
 
 .left-btn {

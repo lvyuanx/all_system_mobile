@@ -1,11 +1,13 @@
-﻿import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 
 const publicRoutes = new Set(['login', '404'])
 
 const buildMeta = (path, overrides = {}) => {
   const segments = path.split('/').filter(Boolean)
-  const index = Math.max(1, segments.length)
+  const rawIndex = Number(overrides.index ?? 1)
+  const index = Number.isFinite(rawIndex) ? Math.max(1, Math.trunc(rawIndex)) : 1
+  const level = String(Math.trunc(index)).length
   const routeKey = segments[segments.length - 1] || 'home'
   const parentPath = segments.length > 1 ? `/${segments.slice(0, -1).join('/')}` : ''
 
@@ -13,11 +15,12 @@ const buildMeta = (path, overrides = {}) => {
     title: '',
     index,
     // Keep compatibility with existing code that still reads meta.level.
-    level: index,
-    keepAlive: index === 1,
+    level,
+    keepAlive: level === 1,
     showTabbar: false,
-    showBack: index > 1,
+    showBack: level > 1,
     showNavBar: true,
+    navBarBackground: 'var(--color-background)',
     routeKey,
     parentPath,
     hierarchy: segments,
@@ -43,6 +46,7 @@ const routes = [
     title: '登录',
     component: () => import('@/views/login/index.vue'),
     meta: {
+      index: 1,
       routeKey: 'login',
       showNavBar: false,
       showTabbar: false,
@@ -55,6 +59,7 @@ const routes = [
     title: '首页',
     component: () => import('@/views/home/index.vue'),
     meta: {
+      index: 1,
       showTabbar: true,
       routeKey: 'home',
     },
@@ -64,12 +69,18 @@ const routes = [
     name: 'HomeDetail',
     title: '详情页',
     component: () => import('@/views/home/detail/index.vue'),
+    meta: {
+      index: 11,
+    },
   }),
   defineRoute({
     path: '/home/menu',
     name: 'HomeMenu',
     title: '功能菜单',
     component: () => import('@/views/home/menu/index.vue'),
+    meta: {
+      index: 11,
+    },
   }),
   defineRoute({
     path: '/home/order',
@@ -77,7 +88,10 @@ const routes = [
     title: '订单管理',
     component: () => import('@/views/home/order/index.vue'),
     meta: {
+      index: 11,
       stableKeyByPath: true,
+      showNavBar: false,
+      navBarBackground: '#f2f3f7',
     },
   }),
   defineRoute({
@@ -85,78 +99,127 @@ const routes = [
     name: 'HomeOrderSearch',
     title: '订单搜索',
     component: () => import('@/views/home/order/search/index.vue'),
+    meta: {
+      index: 111,
+      navBarBackground: '#f2f3f7',
+    },
   }),
   defineRoute({
     path: '/home/order/create',
     name: 'HomeOrderCreate',
     title: '新建订单',
     component: () => import('@/views/home/order/create/index.vue'),
+    meta: {
+      index: 111,
+      navBarBackground: '#f2f3f7',
+    },
   }),
   defineRoute({
     path: '/home/order/detail',
     name: 'HomeOrderDetail',
     title: '订单详情',
     component: () => import('@/views/home/order/detail/index.vue'),
+    meta: {
+      index: 111,
+      showNavBar: false,
+      navBarBackground: '#f4f6fb',
+    },
   }),
   defineRoute({
     path: '/home/order/partner-select',
     name: 'HomeOrderPartnerSelect',
     title: '选择收货方',
     component: () => import('@/views/home/order/partner_select/index.vue'),
+    meta: {
+      index: 111,
+      navBarBackground: '#f4f6fb',
+    },
   }),
   defineRoute({
     path: '/home/order/pattern-select',
     name: 'HomeOrderPatternSelect',
     title: '选择款号',
     component: () => import('@/views/home/order/pattern_select/index.vue'),
+    meta: {
+      index: 111,
+      navBarBackground: '#f4f6fb',
+    },
   }),
   defineRoute({
     path: '/home/order/pay',
     name: 'HomeOrderPay',
     title: '订单收款',
     component: () => import('@/views/home/order/pay/index.vue'),
+    meta: {
+      index: 111,
+      navBarBackground: '#f4f6fb',
+    },
   }),
   defineRoute({
     path: '/home/order/ship',
     name: 'HomeOrderShip',
     title: '订单发货',
     component: () => import('@/views/home/order/ship/index.vue'),
+    meta: {
+      index: 111,
+      navBarBackground: '#f4f6fb',
+    },
   }),
   defineRoute({
     path: '/home/order/timeline',
     name: 'HomeOrderTimeline',
     title: '订单日志',
     component: () => import('@/views/home/order/timeline/index.vue'),
+    meta: {
+      index: 111,
+      navBarBackground: '#f4f6fb',
+    },
   }),
   defineRoute({
     path: '/home/pattern-library',
     name: 'HomePatternLibrary',
     title: '样板库',
     component: () => import('@/views/home/pattern_library/index.vue'),
+    meta: {
+      index: 11,
+    },
   }),
   defineRoute({
     path: '/home/pattern-library/detail',
     name: 'HomePatternLibraryDetail',
     title: '版式详情',
     component: () => import('@/views/home/pattern_library/detail/index.vue'),
+    meta: {
+      index: 111,
+      showNavBar: false,
+    },
   }),
   defineRoute({
     path: '/home/patter-library-add',
     name: 'HomePatterLibraryAdd',
     title: '新增样板',
     component: () => import('@/views/home/patter_library_add/index.vue'),
+    meta: {
+      index: 11,
+    },
   }),
   defineRoute({
     path: '/home/patter-library-search',
     name: 'HomePatterLibrarySearch',
     title: '样板库搜索',
     component: () => import('@/views/home/patter_library_search/index.vue'),
+    meta: {
+      index: 11,
+    },
   }),
   defineRoute({
     path: '/home/patter-library-search-detail',
     name: 'HomePatterLibrarySearchDetail',
     title: '样板库搜索详情',
     component: () => import('@/views/home/patter_library_search_detail/index.vue'),
+    meta: {
+      index: 11,
+    },
   }),
   defineRoute({
     path: '/profile',
@@ -164,6 +227,7 @@ const routes = [
     title: '我的',
     component: () => import('@/views/profile/index.vue'),
     meta: {
+      index: 1,
       showTabbar: true,
       routeKey: 'profile',
     },
@@ -173,24 +237,36 @@ const routes = [
     name: 'ProfileSettings',
     title: '设置',
     component: () => import('@/views/profile/settings/index.vue'),
+    meta: {
+      index: 11,
+    },
   }),
   defineRoute({
     path: '/profile/info',
     name: 'ProfileInfo',
     title: '个人信息',
     component: () => import('@/views/profile/info/index.vue'),
+    meta: {
+      index: 11,
+    },
   }),
   defineRoute({
     path: '/profile/password',
     name: 'ProfilePassword',
     title: '密码修改',
     component: () => import('@/views/profile/password/index.vue'),
+    meta: {
+      index: 11,
+    },
   }),
   defineRoute({
     path: '/profile/avatar',
     name: 'ProfileAvatar',
     title: '修改头像',
     component: () => import('@/views/profile/avatar/index.vue'),
+    meta: {
+      index: 11,
+    },
   }),
   defineRoute({
     path: '/404',
@@ -198,6 +274,7 @@ const routes = [
     title: '404',
     component: () => import('@/views/404/index.vue'),
     meta: {
+      index: 1,
       routeKey: '404',
       showBack: false,
       showNavBar: false,

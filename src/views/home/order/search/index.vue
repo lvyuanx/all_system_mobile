@@ -13,10 +13,6 @@ const searchStore = useOrderSearchStore()
 const keyword = ref(String(route.query.keyword || ''))
 const histories = computed(() => searchStore.recentKeywords)
 
-const onBack = () => {
-  router.back()
-}
-
 const submitSearch = () => {
   const value = keyword.value.trim()
   if (value) {
@@ -51,8 +47,7 @@ const clearHistory = () => {
     <AppSearchNavBar
       v-model="keyword"
       placeholder="搜索我的订单"
-      :show-back="true"
-      @click-left="onBack"
+      :show-back="false"
       @search="submitSearch"
     >
       <template #right>

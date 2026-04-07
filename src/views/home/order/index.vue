@@ -290,7 +290,7 @@ const onRefresh = async () => {
 const goDetail = (order) => {
   router.push({
     path: '/home/order/detail',
-    query: { id: order.order_id, name: '订单详情', list_status: listStatusContext.value },
+    query: { id: order.order_id, name: '订单详情', list_status: listStatusContext.value, order_status: order.order_status },
   })
 }
 
@@ -411,11 +411,6 @@ const cardTitle = (order) => {
   return order.receiver_company || `订单 ${order.order_no || ''}`
 }
 
-const cardDesc = (order) => {
-  const name = order.receiver_name || '-'
-  const phone = order.receiver_phone || '-'
-  return `${name} / ${phone}`
-}
 
 const primaryActionText = (status) => {
   switch (Number(status)) {
@@ -473,7 +468,7 @@ onActivated(() => {
             <van-icon name="filter-o" size="16" />
             <span>筛选</span>
           </button>
-          <button v-if="showCreate" type="button" class="nav-action nav-action-primary" @click="goCreate">
+          <button v-if="showCreate" type="button" class="nav-action" @click="goCreate">
             <van-icon name="plus" size="16" />
             <span>新建</span>
           </button>
@@ -578,41 +573,39 @@ onActivated(() => {
         >
           <div class="card-top">
             <div class="shop-line">
-              <van-icon name="shop-o" size="14" />
               <span class="shop-name text-ellipsis">{{ cardTitle(order) }}</span>
-              <van-icon name="arrow" size="12" class="shop-arrow" />
+              <van-icon name="arrow" size="11" class="shop-arrow" />
             </div>
             <span class="top-status" :class="statusClass(order.order_status)">{{ order.order_status_str || '-' }}</span>
           </div>
 
           <div class="card-main">
-            <div class="thumb-wrap">
-              <img
-                v-if="order.main_image"
-                :src="order.main_image"
-                alt="订单主图"
-                class="thumb-image"
-              />
-              <div v-else class="thumb-placeholder">暂无主图</div>
-            </div>
-            <div class="card-content">
-              <div class="goods-title text-ellipsis">
-                订单号：{{ order.order_no || '-' }}
+            <div class="thumb-list">
+              <template v-if="order.main_images?.length">
+                <img
+                  v-for="(img, i) in order.main_images.slice(0, 4)"
+                  :key="i"
+                  :src="img"
+                  class="thumb-image"
+                />
+              </template>
+              <div v-else class="thumb-placeholder">
+                <van-icon name="photo-o" size="20" color="#d1d5db" />
               </div>
-              <div class="goods-desc text-ellipsis">{{ cardDesc(order) }}</div>
-              <div class="goods-time">下单：{{ order.create_time_str || '-' }}</div>
             </div>
             <div class="price-wrap">
               <div class="amount">￥{{ formatMoney(order.payable_amount) }}</div>
             </div>
           </div>
 
-          <div class="card-actions">
-            <button type="button" class="action-btn" @click.stop="onCardAction('detail', order)">更多</button>
-            <button type="button" class="action-btn" @click.stop="onCardAction('contact', order)">联系客户</button>
-            <button type="button" class="action-btn action-btn-primary" @click.stop="onCardAction('pay', order)">
-              {{ primaryActionText(order.order_status) }}
-            </button>
+          <div class="card-footer">
+            <span class="card-time">{{ order.create_time_str || '-' }}</span>
+            <div class="card-actions">
+              <button type="button" class="action-btn" @click.stop="onCardAction('contact', order)">联系客户</button>
+              <button type="button" class="action-btn action-btn-primary" @click.stop="onCardAction('pay', order)">
+                {{ primaryActionText(order.order_status) }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -635,14 +628,14 @@ onActivated(() => {
 <style scoped>
 .page {
   min-height: 100%;
-  background: #f2f3f7;
+  background: var(--color-background);
 }
 
 .search-wrap {
   position: sticky;
   top: 0;
   z-index: 12;
-  background: #f2f3f7;
+  background: var(--color-background);
 }
 
 .nav-action {
@@ -666,7 +659,7 @@ onActivated(() => {
 }
 
 .filter-popup {
-  background: #f2f3f7;
+  background: var(--color-background);
   padding: 10px 12px 14px;
 }
 
@@ -764,12 +757,16 @@ onActivated(() => {
 .order-card {
   background: #fff;
   border-radius: 12px;
-  padding: 10px;
+  padding: 12px 12px 10px;
   margin-bottom: 8px;
-  border: 1px solid #eceff3;
-  box-shadow: none;
+  border: 1px solid #eef0f4;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease;
+  overflow: hidden;
+}
+
+.order-card:active {
+  transform: scale(0.985);
 }
 
 .card-top {
@@ -777,7 +774,9 @@ onActivated(() => {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .shop-line {
@@ -785,169 +784,121 @@ onActivated(() => {
   flex: 1;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   font-size: 14px;
-  color: #1f2937;
-}
-
-.shop-name {
   font-weight: 600;
+  color: #111827;
 }
 
 .shop-arrow {
-  color: #9ca3af;
+  color: #c4c9d4;
+  flex-shrink: 0;
 }
 
 .top-status {
   flex-shrink: 0;
-  font-size: 13px;
-  color: #6b7280;
+  font-size: 12px;
   font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
 }
 
 .card-main {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
-.thumb-wrap {
-  width: 66px;
-  height: 66px;
-  border-radius: 8px;
+.thumb-list {
+  display: flex;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
-  flex-shrink: 0;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
 }
 
 .thumb-image {
-  width: 100%;
-  height: 100%;
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
   object-fit: cover;
+  flex-shrink: 0;
+  background: #f3f4f6;
   display: block;
 }
 
 .thumb-placeholder {
-  width: 100%;
-  height: 100%;
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  color: #9ca3af;
-}
-
-.card-content {
-  min-width: 0;
-  flex: 1;
-}
-
-.order-card:active {
-  transform: scale(0.98);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-}
-
-.goods-title {
-  font-size: 13px;
-  color: #111827;
-  margin-bottom: 3px;
-}
-
-.goods-desc {
-  font-size: 12px;
-  color: #6b7280;
-  margin-bottom: 2px;
-}
-
-.goods-time {
-  font-size: 12px;
-  color: #6b7280;
 }
 
 .price-wrap {
   flex-shrink: 0;
   text-align: right;
-  min-width: 74px;
+  align-self: flex-end;
+}
+
+.amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.card-time {
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 .card-actions {
   display: flex;
-  justify-content: flex-end;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .action-btn {
-  border: 1px solid #d1d5db;
+  border: 1px solid #e5e7eb;
   background: #fff;
   color: #4b5563;
   font-size: 12px;
-  border-radius: 12px;
-  height: 26px;
-  padding: 0 10px;
+  border-radius: 999px;
+  height: 28px;
+  padding: 0 12px;
+  cursor: pointer;
 }
 
 .action-btn-primary {
-  border-color: #fb923c;
+  border-color: #fdba74;
   color: #ea580c;
   background: #fff7ed;
 }
 
-.amount {
-  font-size: 20px;
-  font-weight: 600;
-  color: #111827;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.top-status.status-created,
-.top-status.status-confirmed,
-.top-status.status-scheduled,
-.top-status.status-producing,
-.top-status.status-finished,
-.top-status.status-shipped,
-.top-status.status-completed,
-.top-status.status-canceled {
-  background: transparent;
-  border: 0;
-}
-
-.top-status.status-created {
-  color: #2563eb;
-}
-
-.top-status.status-confirmed {
-  color: #7c3aed;
-}
-
-.top-status.status-scheduled {
-  color: #0284c7;
-}
-
-.top-status.status-producing {
-  color: #d97706;
-}
-
-.top-status.status-finished {
-  color: #059669;
-}
-
-.top-status.status-shipped {
-  color: #0f766e;
-}
-
-.top-status.status-completed {
-  color: #0f172a;
-}
-
-.top-status.status-canceled {
-  color: #64748b;
-}
+/* 状态标签颜色 */
+.top-status.status-created   { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
+.top-status.status-confirmed { color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe; }
+.top-status.status-scheduled { color: #0284c7; background: #f0f9ff; border-color: #bae6fd; }
+.top-status.status-producing { color: #d97706; background: #fffbeb; border-color: #fde68a; }
+.top-status.status-finished  { color: #059669; background: #ecfdf5; border-color: #a7f3d0; }
+.top-status.status-shipped   { color: #0f766e; background: #f0fdfa; border-color: #99f6e4; }
+.top-status.status-completed { color: #374151; background: #f9fafb; border-color: #d1d5db; }
+.top-status.status-canceled  { color: #9ca3af; background: #f9fafb; border-color: #e5e7eb; }
 
 .text-ellipsis {
   overflow: hidden;
@@ -956,9 +907,9 @@ onActivated(() => {
 }
 
 @media (max-width: 360px) {
-  .thumb-wrap {
-    width: 66px;
-    height: 66px;
+  .thumb-image {
+    width: 56px;
+    height: 56px;
   }
 
   .action-btn {
