@@ -58,6 +58,7 @@ const onLogin = async () => {
       tokenTag: loginData.token_tag || loginData.tokenTag,
       date_joined: loginData.date_joined || '',
       is_superuser: loginData.is_superuser || false,
+      perm_packs: loginData.perm_packs || loginData.permPacks || [],
     })
     // 登录后异步拉取员工信息
     setTimeout(async () => {

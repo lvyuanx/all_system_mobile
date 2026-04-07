@@ -152,7 +152,7 @@ const routes = [
     component: () => import('@/views/home/order/pay/index.vue'),
     meta: {
       index: 111,
-      navBarBackground: '#f4f6fb',
+      showNavBar: false,
     },
   }),
   defineRoute({

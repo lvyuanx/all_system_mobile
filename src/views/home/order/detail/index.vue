@@ -16,9 +16,11 @@ import {
   startProduction,
 } from '@/api/order'
 import { ORDER_STATUS, formatMoney } from '@/utils/orderConstants'
+import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 const orderId = computed(() => Number(route.query.id || route.query.order_id || 0))
 const navTitle = computed(() => route.query.name || '订单详情')
@@ -84,6 +86,18 @@ const canPay = computed(() => {
   return payable - paid > 0.0001
 })
 
+const permCodes = computed(() =>
+  (userStore.permPacks || [])
+    .map((p) => p.pack_code || p.packCode)
+    .filter(Boolean),
+)
+
+const hasPerm = (...codes) => codes.some((code) => permCodes.value.includes(code))
+
+const canViewPayDetail = computed(() => hasPerm('ORDER_CREATE_MANAGE', 'FINANCE_MANAGE'))
+const canViewFinanceOps = computed(() => hasPerm('FINANCE_MANAGE'))
+const canViewLogistics = computed(() => hasPerm('ORDER_COMPLETE_MANAGE', 'ORDER_CREATE_MANAGE'))
+
 const actionButtons = computed(() => {
   if (!detail.value) return []
 
@@ -115,7 +129,7 @@ const actionButtons = computed(() => {
   if (status === ORDER_STATUS.SHIPPED) {
     actions.push({ key: 'complete', label: '签收完成', type: 'primary' })
   }
-  if (canPay.value) {
+  if (canPay.value && canViewFinanceOps.value) {
     actions.push({ key: 'pay', label: '收款', type: 'warning', route: '/home/order/pay' })
   }
 
@@ -192,8 +206,7 @@ const statusConfig = computed(() => {
 
 const itemCountText = (item) => {
   const count = item?.count ?? 0
-  const unit = item?.total_unit || ''
-  return `${count}${unit ? ` ${unit}` : ''}`
+  return `${count} 件`
 }
 
 const statusFlowActive = computed(() => {
@@ -310,12 +323,12 @@ onUnmounted(() => {
       <div class="content">
 
         <!-- 支付明细 -->
-        <div class="card">
+        <div v-if="canViewPayDetail" class="card">
           <div class="card-header">
             <van-icon name="bill-o" class="card-icon" />
             <span class="card-title">支付明细</span>
             <van-button
-              v-if="canPay"
+              v-if="canViewFinanceOps && canPay"
               size="small"
               round
               class="pay-btn"
@@ -328,8 +341,8 @@ onUnmounted(() => {
               <span class="amount-label">应付金额</span>
               <span class="amount-value is-payable">￥{{ formatMoney(detail.payable_amount) }}</span>
             </div>
-            <div class="amount-divider" />
-            <div class="amount-item">
+            <div v-if="canViewFinanceOps" class="amount-divider" />
+            <div v-if="canViewFinanceOps" class="amount-item">
               <span class="amount-label">已付金额</span>
               <span class="amount-value is-paid">￥{{ formatMoney(detail.paid_amount) }}</span>
             </div>
@@ -394,19 +407,19 @@ onUnmounted(() => {
               </div>
               <div class="goods-row">
                 <span class="goods-qty">× {{ itemCountText(item) }}</span>
-                <span class="goods-price">￥{{ formatMoney(item.unit_price) }}/件</span>
+                <span v-if="canViewPayDetail" class="goods-price">￥{{ formatMoney(item.unit_price) }}/件</span>
               </div>
               <div v-if="item.discount_price && Number(item.discount_price)" class="goods-discount">
                 优惠 ￥{{ formatMoney(item.discount_price) }}
               </div>
-              <div class="goods-subtotal">小计：<span class="is-payable">￥{{ formatMoney(item.subtotal) }}</span></div>
+              <div v-if="canViewPayDetail" class="goods-subtotal">小计：<span class="is-payable">￥{{ formatMoney(item.subtotal) }}</span></div>
               <div v-if="item.memo" class="goods-memo">备注：{{ item.memo }}</div>
             </div>
           </div>
         </div>
 
         <!-- 物流信息 -->
-        <div class="card">
+        <div v-if="canViewLogistics" class="card">
           <div class="card-header">
             <van-icon name="logistics" class="card-icon" />
             <span class="card-title">物流信息</span>
@@ -428,7 +441,7 @@ onUnmounted(() => {
         </div>
 
         <!-- 收发货方信息（合并卡片） -->
-        <div class="card">
+        <div v-if="canViewLogistics" class="card">
           <div class="card-header">
             <van-icon name="location-o" class="card-icon" />
             <span class="card-title">收发货信息</span>

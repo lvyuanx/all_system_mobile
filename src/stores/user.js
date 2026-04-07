@@ -7,6 +7,7 @@ export const useUserStore = defineStore(
     const isLogin = ref(false)
     const token = ref('')
     const tokenTag = ref('Authorization')
+    const permPacks = ref([])
 
     const userInfo = ref({
       username: '',
@@ -26,6 +27,7 @@ export const useUserStore = defineStore(
       isLogin.value = true
       token.value = userData.token || ''
       tokenTag.value = userData.tokenTag || userData.token_tag || 'Authorization'
+      permPacks.value = userData.perm_packs || userData.permPacks || []
       userInfo.value = {
         username: userData.username || '',
         nickname: userData.nickname || userData.username || '',
@@ -39,6 +41,7 @@ export const useUserStore = defineStore(
       isLogin.value = false
       token.value = ''
       tokenTag.value = 'Authorization'
+      permPacks.value = []
       userInfo.value = {
         username: '',
         nickname: '',
@@ -65,6 +68,7 @@ export const useUserStore = defineStore(
       isLoggedIn,
       token,
       tokenTag,
+      permPacks,
       userInfo,
       staffInfo,
       login,
@@ -76,7 +80,7 @@ export const useUserStore = defineStore(
   {
     persist: {
       key: 'user_state',
-      paths: ['isLogin', 'userInfo', 'staffInfo', 'token', 'tokenTag'],
+      paths: ['isLogin', 'userInfo', 'staffInfo', 'token', 'tokenTag', 'permPacks'],
       storage: localStorage,
     },
   },

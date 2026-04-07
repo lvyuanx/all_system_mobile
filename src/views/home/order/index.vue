@@ -12,10 +12,12 @@ import {
 import { ORDER_STATUS, formatMoney } from '@/utils/orderConstants'
 import AppSearchNavBar from '@/components/AppSearchNavBar.vue'
 import { useOrderSearchStore } from '@/stores/orderSearch'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const route = useRoute()
 const orderSearchStore = useOrderSearchStore()
+const userStore = useUserStore()
 
 const search = ref('')
 
@@ -253,6 +255,18 @@ const formatDate = (date) => {
 
 const startDateText = computed(() => (dateStart.value ? formatDate(dateStart.value) : '选择起始时间'))
 const endDateText = computed(() => (dateEnd.value ? formatDate(dateEnd.value) : '选择终止时间'))
+
+const permCodes = computed(() =>
+  (userStore.permPacks || [])
+    .map((p) => p.pack_code || p.packCode)
+    .filter(Boolean),
+)
+
+const canViewAmount = computed(() =>
+  ['ORDER_COMPLETE_MANAGE', 'ORDER_CREATE_MANAGE', 'FINANCE_MANAGE'].some((code) =>
+    permCodes.value.includes(code),
+  ),
+)
 
 const currentYear = new Date().getFullYear()
 const quickRanges = computed(() => [
@@ -594,7 +608,7 @@ onActivated(() => {
               </div>
             </div>
             <div class="price-wrap">
-              <div class="amount">￥{{ formatMoney(order.payable_amount) }}</div>
+              <div v-if="canViewAmount" class="amount">￥{{ formatMoney(order.payable_amount) }}</div>
             </div>
           </div>
 
