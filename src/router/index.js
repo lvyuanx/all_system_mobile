@@ -243,6 +243,8 @@ const routes = [
     component: () => import('@/views/home/patter_library_search/index.vue'),
     meta: {
       index: 11,
+      showNavBar: false,
+      navBarBackground: '#f4f6fb',
     },
   }),
   defineRoute({
@@ -252,6 +254,7 @@ const routes = [
     component: () => import('@/views/home/patter_library_search_detail/index.vue'),
     meta: {
       index: 11,
+      showNavBar: false,
     },
   }),
   defineRoute({

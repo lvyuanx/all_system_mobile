@@ -1,22 +1,52 @@
 ﻿<script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+defineOptions({ name: 'HomePatterLibrarySearch' })
+
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { imageSearch, imageSearchQuota } from '@/api/pattern_search'
 
+const route = useRoute()
 const router = useRouter()
 
 const quota = ref(null)
 const searching = ref(false)
 const imageFileList = ref([])
 const searchImageFile = ref(null)
+const searched = ref(false)
 
 const results = ref([])
+const pageRef = ref(null)
+const isCollapsed = ref(false)
+let lastScrollTop = 0
+let rafId = null
+const THRESHOLD = 8
 
-const quotaText = computed(() => {
-  if (quota.value === -1) return 'VIP'
-  if (quota.value === null) return '--'
-  return `剩余次数：${quota.value}`
+const navTitle = computed(() => route.query.name || '版式搜索')
+
+const quotaBadgeText = computed(() => {
+  if (quota.value === -1) return '不限次数'
+  if (quota.value === null) return '配额未知'
+  if (quota.value <= 0) return '次数不足'
+  return `剩余 ${quota.value} 次`
+})
+
+const quotaBadgeClass = computed(() => {
+  if (quota.value === -1) return 'quota-vip'
+  if (quota.value === null) return 'quota-unknown'
+  if (quota.value <= 0) return 'quota-danger'
+  return 'quota-normal'
+})
+
+const uploadHint = computed(() => {
+  if (!searchImageFile.value) return '建议上传清晰主图，匹配结果更准确'
+  return `当前图片：${searchImageFile.value.name || '已上传'}`
+})
+
+const headerSubText = computed(() => {
+  if (searching.value) return '正在检索图片，请稍候...'
+  if (searchImageFile.value?.name) return `当前图片：${searchImageFile.value.name}`
+  return '上传图片后可快速检索'
 })
 
 const canSearch = computed(() => {
@@ -56,10 +86,12 @@ const onSearch = async () => {
     showToast('剩余次数不足')
     return
   }
+
   searching.value = true
+  searched.value = true
   try {
     const res = await imageSearch(searchImageFile.value, { loading: false })
-    const list = res?.data || []
+    const list = Array.isArray(res?.data) ? res.data : []
     results.value = list.map((item) => ({
       ...item,
       scoreText: formatScore(item.score),
@@ -76,208 +108,619 @@ const onClear = () => {
   imageFileList.value = []
   searchImageFile.value = null
   results.value = []
+  searched.value = false
 }
 
 const onSelectResult = (item) => {
-  if (!item?.original_name) {
+  const filename = item?.original_name || item?.stored_name
+  if (!filename) {
     showToast('缺少图片信息')
     return
   }
   router.push({
     path: '/home/patter-library-search-detail',
     query: {
-      filename: item.original_name,
+      filename,
       url: item.url,
       score: item.scoreText || '',
     },
   })
 }
 
-onMounted(loadQuota)
+const scoreLevelClass = (score) => {
+  const value = Number(score)
+  if (Number.isNaN(value)) return 'score-unknown'
+  if (value >= 0.85) return 'score-high'
+  if (value >= 0.65) return 'score-mid'
+  return 'score-low'
+}
+
+const onClickLeft = () => {
+  const hasBack = Boolean(window.history.state?.back)
+  if (hasBack) {
+    router.back()
+    return
+  }
+  router.replace('/home')
+}
+
+const onScroll = () => {
+  if (rafId) return
+  rafId = requestAnimationFrame(() => {
+    rafId = null
+    const el = pageRef.value
+    if (!el) return
+    const current = el.scrollTop
+    const delta = current - lastScrollTop
+    if (current <= 0) {
+      isCollapsed.value = false
+    } else if (delta > THRESHOLD) {
+      isCollapsed.value = true
+    } else if (delta < -THRESHOLD) {
+      isCollapsed.value = false
+    }
+    lastScrollTop = current
+  })
+}
+
+onMounted(() => {
+  loadQuota()
+  pageRef.value?.addEventListener('scroll', onScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  pageRef.value?.removeEventListener('scroll', onScroll)
+  if (rafId) cancelAnimationFrame(rafId)
+})
 </script>
 
 <template>
-  <div class="page">
-    <section class="hero">
-      <div class="hero-title">以图搜版式</div>
-      <div class="hero-sub">上传图片，快速匹配相关版式与关联订单</div>
-    </section>
-
-    <section class="card search-card">
-      <div class="card-header">
-        <span>图片搜索</span>
-        <span class="quota">{{ quotaText }}</span>
-      </div>
-      <div class="card-body">
-        <van-uploader
-          v-model="imageFileList"
-          :max-count="1"
-          accept="image/*"
-          :after-read="onImageRead"
-          @delete="onImageDelete"
-        />
-        <div class="search-actions">
-          <van-button
-            type="primary"
-            :loading="searching"
-            loading-text="搜索中"
-            :disabled="!canSearch"
-            @click="onSearch"
-          >
-            搜索
-          </van-button>
-          <van-button plain type="default" @click="onClear">清空</van-button>
+  <div ref="pageRef" class="page">
+    <header class="sticky-header status-search">
+      <div class="header-nav">
+        <button class="back-btn" @click="onClickLeft">
+          <van-icon name="arrow-left" size="20" />
+        </button>
+        <div class="header-title">{{ navTitle }}</div>
+        <div class="header-right">
+          <span class="header-quota" :class="quotaBadgeClass">{{ quotaBadgeText }}</span>
         </div>
       </div>
-    </section>
 
-    <section class="card result-card">
-      <div class="card-header">
-        <span>搜索结果</span>
-        <span class="muted">{{ results.length }} 条</span>
+      <div class="header-status" :class="{ collapsed: isCollapsed }">
+        <van-icon name="photo-o" class="status-icon" />
+        <div class="status-sub">{{ headerSubText }}</div>
       </div>
-      <div class="card-body">
-        <div v-if="!results.length" class="empty">暂无结果，请先上传图片搜索</div>
-        <div v-else class="result-list">
-          <div v-for="item in results" :key="item.stored_name" class="result-item">
-            <van-image :src="item.url" width="86" height="86" fit="cover" class="result-img" />
-            <div class="result-info">
-              <div class="result-score">相似度 {{ item.scoreText }}</div>
-              <div class="result-name">{{ item.original_name }}</div>
-              <van-button size="small" type="primary" @click="onSelectResult(item)">查看详情</van-button>
-            </div>
+    </header>
+
+    <div class="content">
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title-wrap">
+            <van-icon name="photo-o" size="15" class="card-icon" />
+            <span class="card-title">搜索图片</span>
+          </div>
+          <span class="card-desc">支持单张上传</span>
+        </div>
+        <div class="card-body search-body">
+          <van-uploader
+            v-model="imageFileList"
+            class="search-uploader"
+            :max-count="1"
+            accept="image/*"
+            :after-read="onImageRead"
+            @delete="onImageDelete"
+          />
+          <div class="upload-hint">
+            <span class="hint-dot" />
+            <span class="hint-text">{{ uploadHint }}</span>
+          </div>
+
+          <div class="search-actions">
+            <button
+              type="button"
+              class="panel-btn panel-btn-primary"
+              :class="{ disabled: !canSearch || searching }"
+              :disabled="!canSearch || searching"
+              @click="onSearch"
+            >
+              <van-loading v-if="searching" size="14" color="#fff" class="btn-loading" />
+              <span>{{ searching ? '搜索中' : '开始搜索' }}</span>
+            </button>
+            <button type="button" class="panel-btn panel-btn-ghost" @click="onClear">清空</button>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title-wrap">
+            <van-icon name="records-o" size="15" class="card-icon" />
+            <span class="card-title">搜索结果</span>
+          </div>
+          <span class="card-desc">{{ results.length }} 条</span>
+        </div>
+        <div class="card-body">
+          <div v-if="searching" class="loading-wrap">
+            <van-loading size="26" color="#2563eb" vertical>正在检索图片...</van-loading>
+          </div>
+          <div v-else-if="!results.length" class="empty-wrap">
+            <van-empty :description="searched ? '未找到匹配结果，请更换图片重试' : '请先上传图片并点击搜索'" />
+          </div>
+          <div v-else class="result-list">
+            <article
+              v-for="(item, index) in results"
+              :key="item.stored_name || `${item.url}-${index}`"
+              class="result-item"
+              @click="onSelectResult(item)"
+            >
+              <div class="thumb-wrap">
+                <van-image
+                  v-if="item.url"
+                  :src="item.url"
+                  width="84"
+                  height="84"
+                  fit="cover"
+                  class="result-img"
+                />
+                <div v-else class="thumb-placeholder">
+                  <van-icon name="photo-o" size="20" color="#cbd5e1" />
+                </div>
+                <span class="thumb-index">{{ index + 1 }}</span>
+              </div>
+
+              <div class="result-info">
+                <div class="result-top">
+                  <span class="result-score" :class="scoreLevelClass(item.score)">相似度 {{ item.scoreText }}</span>
+                  <span class="result-arrow">
+                    <van-icon name="arrow" size="12" />
+                  </span>
+                </div>
+                <div class="result-name">{{ item.original_name || item.stored_name || '-' }}</div>
+                <div class="result-foot">
+                  <button type="button" class="action-btn" @click.stop="onSelectResult(item)">查看详情</button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .page {
-  min-height: 100%;
-  background: #f4f6fb;
-  padding-bottom: 40px;
+  height: 100vh;
+  overflow-y: auto;
+  background: #f3f4f6;
+  padding-bottom: 20px;
 }
 
-.hero {
-  padding: 20px 16px 10px;
-  background: radial-gradient(circle at 20% 0%, rgba(52, 211, 153, 0.35) 0%, rgba(52, 211, 153, 0) 45%),
-    radial-gradient(circle at 90% 10%, rgba(59, 130, 246, 0.35) 0%, rgba(59, 130, 246, 0) 50%),
-    linear-gradient(150deg, #ffffff 0%, #f1f5ff 75%, #ecf4ff 100%);
-  border-radius: 0 0 22px 22px;
-  box-shadow: 0 8px 24px rgba(31, 42, 68, 0.08);
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 22;
+  padding-top: env(safe-area-inset-top);
+  overflow: hidden;
 }
 
-.hero-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: #1f2a44;
+.sticky-header::after {
+  content: '';
+  position: absolute;
+  right: -24px;
+  top: -22px;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.11);
 }
 
-.hero-sub {
-  margin-top: 6px;
+.header-nav {
+  height: 46px;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  padding-right: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.back-btn {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.header-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-right {
+  display: inline-flex;
+  align-items: center;
+}
+
+.header-quota {
+  font-size: 11px;
+  line-height: 1;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 16px 12px;
+  position: relative;
+  z-index: 1;
+  max-height: 60px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.28s ease, opacity 0.22s ease, padding 0.28s ease;
+}
+
+.header-status.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.status-icon {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.88);
+  flex-shrink: 0;
+}
+
+.status-sub {
+  min-width: 0;
+  flex: 1;
   font-size: 12px;
-  color: rgba(31, 42, 68, 0.65);
+  color: rgba(255, 255, 255, 0.76);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-search {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+}
+
+.header-quota.quota-vip {
+  color: #064e3b;
+  border-color: rgba(16, 185, 129, 0.3);
+  background: #d1fae5;
+}
+
+.header-quota.quota-normal {
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.header-quota.quota-danger {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.header-quota.quota-unknown {
+  color: #334155;
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.content {
+  padding: 10px;
 }
 
 .card {
-  margin: 14px 14px 0;
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(31, 42, 68, 0.08);
+  border-radius: 12px;
+  border: 1px solid #eef0f4;
   overflow: hidden;
+}
+
+.card + .card {
+  margin-top: 10px;
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  gap: 8px;
+  padding: 12px 12px 10px;
   font-size: 13px;
   font-weight: 700;
-  color: #1f2a44;
-  background: #f7f9ff;
-  border-bottom: 1px solid rgba(31, 42, 68, 0.06);
+  color: #111827;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fff;
+}
+
+.card-title-wrap {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-icon {
+  color: #2563eb;
+}
+
+.card-title {
+  font-size: 14px;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .card-body {
-  padding: 12px 14px 14px;
+  padding: 12px;
 }
 
-.quota {
-  font-size: 11px;
-  font-weight: 600;
-  color: #16a34a;
-}
-
-.muted {
-  font-size: 11px;
-  color: rgba(31, 42, 68, 0.5);
-}
-
-.search-actions {
-  margin-top: 12px;
+.search-body {
   display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.search-actions :deep(.van-button--primary) {
-  background: linear-gradient(90deg, #2563eb, #3b82f6);
-  border-color: transparent;
-}
-
-.search-actions :deep(.van-button--primary .van-loading__spinner) {
-  color: #fff;
-}
-
-.search-actions :deep(.van-button--primary.van-button--loading) {
-  background: linear-gradient(90deg, #1d4ed8, #2563eb);
-}
-
-.result-list {
-  display: grid;
+.search-uploader :deep(.van-uploader__wrapper) {
   gap: 10px;
 }
 
-.result-item {
-  display: grid;
-  grid-template-columns: 86px 1fr;
-  gap: 12px;
-  padding: 10px;
-  background: #f8faff;
-  border-radius: 12px;
-  border: 1px solid rgba(59, 130, 246, 0.12);
+.search-uploader :deep(.van-uploader__preview) {
+  margin: 0;
 }
 
-.result-img {
+.search-uploader :deep(.van-uploader__preview-image),
+.search-uploader :deep(.van-uploader__upload) {
+  width: 88px !important;
+  height: 88px !important;
   border-radius: 10px;
   overflow: hidden;
 }
 
-.result-info {
+.search-uploader :deep(.van-uploader__upload) {
+  border: 1px dashed #d1d5db;
+  background: #f9fafb;
+}
+
+.upload-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #f8fafc;
+}
+
+.hint-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #60a5fa;
+  flex-shrink: 0;
+}
+
+.hint-text {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.search-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.panel-btn {
+  border: 0;
+  height: 40px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.panel-btn-primary {
+  color: #fff;
+  background: var(--color-primary);
+}
+
+.panel-btn-primary.disabled {
+  background: #bfdbfe;
+  cursor: not-allowed;
+}
+
+.panel-btn-ghost {
+  background: color-mix(in srgb, var(--color-primary) 10%, #ffffff);
+  color: var(--color-primary);
+}
+
+.btn-loading {
+  line-height: 1;
+}
+
+.loading-wrap {
+  padding: 24px 0;
+}
+
+.empty-wrap {
+  padding: 8px 0;
+}
+
+.result-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+
+.result-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #edf0f5;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.result-item:active {
+  transform: scale(0.986);
+}
+
+.thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.result-img {
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.thumb-placeholder {
+  width: 84px;
+  height: 84px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumb-index {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.66);
+  padding: 0 4px;
+}
+
+.result-info {
   min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .result-score {
   font-size: 12px;
-  font-weight: 700;
-  color: #1f2a44;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 999px;
+  padding: 5px 9px;
+}
+
+.result-score.score-high {
+  color: #0369a1;
+  background: #e0f2fe;
+}
+
+.result-score.score-mid {
+  color: #0f766e;
+  background: #ccfbf1;
+}
+
+.result-score.score-low {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
+.result-score.score-unknown {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.result-arrow {
+  color: #94a3b8;
+  flex-shrink: 0;
 }
 
 .result-name {
-  font-size: 11px;
-  color: rgba(31, 42, 68, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.4;
   word-break: break-all;
 }
 
-.empty {
+.result-foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #475569;
   font-size: 12px;
-  color: rgba(31, 42, 68, 0.5);
-  text-align: center;
-  padding: 14px 0;
+  border-radius: 999px;
+  height: 28px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.action-btn:active {
+  opacity: 0.86;
+}
+
+@media (max-width: 360px) {
+  .content {
+    padding: 8px;
+  }
+
+  .panel-btn {
+    font-size: 14px;
+  }
+
+  .header-title {
+    font-size: 16px;
+  }
 }
 </style>

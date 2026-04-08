@@ -22,11 +22,17 @@ const activeTab = computed(() => {
   return tab ? tab.name : 'home'
 })
 
-const showTabbar = computed(() => route.meta.showTabbar === true)
-const showNavBar = computed(() => {
-  if (route.meta?.showNavBar === false) return false
-  return !['/home', '/profile'].includes(route.path)
+const isAppNavVisible = (targetRoute) => {
+  if (targetRoute.meta?.showNavBar === false) return false
+  return !['/home', '/profile'].includes(targetRoute.path)
+}
+
+const pageViewStyle = (targetRoute) => ({
+  paddingTop: isAppNavVisible(targetRoute) ? 'calc(46px + env(safe-area-inset-top))' : '0px',
 })
+
+const showTabbar = computed(() => route.meta.showTabbar === true)
+const showNavBar = computed(() => isAppNavVisible(route))
 const navBarTitle = computed(() => route.query.name || route.meta.title || '页面')
 const navBarShowBack = computed(() => route.meta.showBack !== false)
 const navBarBackground = computed(() => route.meta.navBarBackground || 'var(--color-background)')
@@ -138,14 +144,16 @@ const onClickNavLeft = () => {
 
 <template>
   <div class="app-shell">
-    <div v-if="showNavBar" class="navbar-wrapper">
-      <AppCustomNavBar
-        :title="navBarTitle"
-        :show-back="navBarShowBack"
-        :background="navBarBackground"
-        @click-left="onClickNavLeft"
-      />
-    </div>
+    <transition name="nav-fade">
+      <div v-if="showNavBar" class="navbar-wrapper">
+        <AppCustomNavBar
+          :title="navBarTitle"
+          :show-back="navBarShowBack"
+          :background="navBarBackground"
+          @click-left="onClickNavLeft"
+        />
+      </div>
+    </transition>
 
     <div class="content-wrapper">
       <router-view v-slot="{ Component, route: currentRoute }">
@@ -166,6 +174,7 @@ const onClickNavLeft = () => {
                     : currentRoute.fullPath
               "
               class="page-view"
+              :style="pageViewStyle(currentRoute)"
             />
           </keep-alive>
         </transition>
@@ -204,9 +213,11 @@ const onClickNavLeft = () => {
 }
 
 .navbar-wrapper {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 120;
-  flex-shrink: 0;
 }
 
 .content-wrapper {
@@ -221,6 +232,7 @@ const onClickNavLeft = () => {
   left: 0;
   width: 100%;
   height: 100%;
+  box-sizing: border-box;
   background-color: var(--color-card);
   overflow-y: auto;
   overflow-x: hidden;
@@ -244,6 +256,8 @@ const onClickNavLeft = () => {
 .ios-forward-leave-active,
 .ios-back-enter-active,
 .ios-back-leave-active {
+  position: absolute;
+  inset: 0;
   transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
   will-change: transform;
   backface-visibility: hidden;
@@ -294,12 +308,22 @@ const onClickNavLeft = () => {
 
 .ios-none-enter-active,
 .ios-none-leave-active {
+  position: absolute;
+  inset: 0;
   transition: none;
 }
 
 .page-transitioning {
   pointer-events: none;
 }
+
+.nav-fade-enter-active,
+.nav-fade-leave-active {
+  transition: opacity 180ms ease;
+}
+
+.nav-fade-enter-from,
+.nav-fade-leave-to {
+  opacity: 0;
+}
 </style>
-
-
