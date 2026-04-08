@@ -74,7 +74,8 @@ const onSubmit = async () => {
     showToast('请选择配送方式')
     return
   }
-  if (!form.value.tracking_no.trim()) {
+  const isExpressMethod = (form.value.delivery_method_label || '').includes('快递')
+  if (isExpressMethod && !form.value.tracking_no.trim()) {
     showToast('请输入物流单号')
     return
   }
