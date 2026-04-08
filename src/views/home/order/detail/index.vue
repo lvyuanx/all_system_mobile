@@ -94,9 +94,10 @@ const permCodes = computed(() =>
 
 const hasPerm = (...codes) => codes.some((code) => permCodes.value.includes(code))
 
-const canViewPayDetail = computed(() => hasPerm('ORDER_CREATE_MANAGE', 'FINANCE_MANAGE'))
-const canViewFinanceOps = computed(() => hasPerm('FINANCE_MANAGE'))
-const canViewLogistics = computed(() => hasPerm('ORDER_COMPLETE_MANAGE', 'ORDER_CREATE_MANAGE'))
+const isSuperuser = computed(() => Boolean(userStore.userInfo?.is_superuser))
+const canViewPayDetail = computed(() => isSuperuser.value || hasPerm('ORDER_CREATE_MANAGE', 'FINANCE_MANAGE'))
+const canViewFinanceOps = computed(() => isSuperuser.value || hasPerm('FINANCE_MANAGE'))
+const canViewLogistics = computed(() => isSuperuser.value || hasPerm('ORDER_COMPLETE_MANAGE', 'ORDER_CREATE_MANAGE'))
 
 const actionButtons = computed(() => {
   if (!detail.value) return []
@@ -183,7 +184,17 @@ const handleAction = async (action) => {
   try {
     await api({ order_id: orderId.value }, { loading: false })
     showToast('操作成功')
-    await fetchDetail()
+    const hasBack = Boolean(window.history.state?.back)
+    if (hasBack) {
+      router.back()
+      return
+    }
+    const listStatusQuery = listStatus.value
+    const query = {}
+    if (listStatusQuery !== null && listStatusQuery !== 'all') {
+      query.status = String(listStatusQuery)
+    }
+    router.replace({ path: '/home/order', query })
   } catch {
     // 错误由拦截器处理
   }

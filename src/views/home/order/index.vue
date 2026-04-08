@@ -262,8 +262,10 @@ const permCodes = computed(() =>
     .filter(Boolean),
 )
 
+const isSuperuser = computed(() => Boolean(userStore.userInfo?.is_superuser))
 const canViewAmount = computed(() =>
-  ['ORDER_COMPLETE_MANAGE', 'ORDER_CREATE_MANAGE', 'FINANCE_MANAGE'].some((code) =>
+  isSuperuser.value
+  || ['ORDER_COMPLETE_MANAGE', 'ORDER_CREATE_MANAGE', 'FINANCE_MANAGE'].some((code) =>
     permCodes.value.includes(code),
   ),
 )

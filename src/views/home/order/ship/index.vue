@@ -97,7 +97,17 @@ const onSubmit = async () => {
       { loading: false },
     )
     showToast('发货成功')
-    router.back()
+    const hasBack = Boolean(window.history.state?.back)
+    if (hasBack) {
+      router.go(-2)
+      return
+    }
+    const listStatus = route.query.list_status
+    const query = {}
+    if (listStatus !== undefined && listStatus !== null && listStatus !== '' && listStatus !== 'all') {
+      query.status = String(listStatus)
+    }
+    router.replace({ path: '/home/order', query })
   } catch {
     // 错误由拦截器处理
   } finally {
