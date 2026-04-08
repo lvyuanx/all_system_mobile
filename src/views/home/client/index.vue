@@ -76,7 +76,7 @@ const loadMore = async (options = {}) => {
     }
     if (!finished.value) page.value += 1
   } catch {
-    showToast('客户列表加载失败')
+    // 错误由拦截器处理
   } finally {
     requesting.value = false
     if (!silent) loading.value = false

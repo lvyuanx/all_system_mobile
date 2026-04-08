@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { showToast, showLoadingToast, closeToast, showDialog } from 'vant'
 import { useUserStore } from '@/stores/user'
+import router from '@/router'
 
 // 创建 axios 实例
 const baseURL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
@@ -64,6 +65,18 @@ request.interceptors.response.use(
       return data
     }
 
+    if (String(code) === '401') {
+      const userStore = useUserStore()
+      userStore.logout()
+      if (router.currentRoute.value?.name !== 'Login') {
+        router.replace({ path: '/login' })
+      }
+      showToast({
+        message: "未登录",
+      })
+      return Promise.reject(new Error(msg || '未授权'))
+    }
+
     // 根据 level 处理不同级别的错误
     const message = `${code}:${msg}`
 
@@ -107,7 +120,9 @@ request.interceptors.response.use(
           break
         case 401:
           message = '未授权，请重新登录'
-          // 可在此处理登录过期，跳转到登录页
+          if (router.currentRoute.value?.name !== 'Login') {
+            router.replace({ path: '/login' })
+          }
           break
         case 403:
           message = '拒绝访问'

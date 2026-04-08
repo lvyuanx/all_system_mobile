@@ -67,7 +67,7 @@ const fetchDetail = async () => {
   } catch {
     detail.value = null
     loadError.value = true
-    showToast('订单详情加载失败')
+    // 错误由拦截器处理
   } finally {
     loading.value = false
   }

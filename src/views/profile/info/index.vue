@@ -42,7 +42,7 @@ onMounted(async () => {
       age: d.age != null ? String(d.age) : '',
     }
   } catch {
-    showToast('获取个人信息失败')
+    // 错误由拦截器处理
   } finally {
     loading.value = false
   }

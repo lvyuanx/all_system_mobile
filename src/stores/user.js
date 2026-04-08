@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { menuCache } from '@/utils/menuCache'
 
 export const useUserStore = defineStore(
   'user',
@@ -42,6 +43,7 @@ export const useUserStore = defineStore(
       token.value = ''
       tokenTag.value = 'Authorization'
       permPacks.value = []
+      menuCache.clear()
       userInfo.value = {
         username: '',
         nickname: '',

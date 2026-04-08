@@ -1,6 +1,6 @@
 <script setup>
 defineOptions({ name: 'HomeIndex' })
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
@@ -21,13 +21,17 @@ const loadMenus = async () => {
       if (!item.url) preloadMenus(item.id)
     })
   } catch {
-    showToast('菜单加载失败')
+    // 错误由拦截器处理
   } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
+  loadMenus()
+})
+
+onActivated(() => {
   loadMenus()
 })
 

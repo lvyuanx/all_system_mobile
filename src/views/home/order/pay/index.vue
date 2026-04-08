@@ -62,7 +62,7 @@ const fetchData = async () => {
       form.value.pay_amount = remainingAmount.value.toFixed(2)
     }
   } catch {
-    showToast('支付信息加载失败')
+    // 错误由拦截器处理
   } finally {
     loading.value = false
   }
