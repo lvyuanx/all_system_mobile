@@ -50,7 +50,7 @@ router.beforeEach((to, from, next) => {
     next()
     return
   }
-  // Query 鍙傛暟鍙樺寲涓嶈Е鍙戞柟鍚戝姩鐢伙紝閬垮厤鈥滈噸杩涢〉闈⑩€濇劅
+  // Query 参数变化不触发方向动画，避免“重进页面”感
   if (to.path === from.path) {
     transitionName.value = 'ios-none'
     next()
@@ -111,14 +111,14 @@ router.afterEach(() => {
 })
 
 const cachedComponents = computed(() => {
-  // level > 1 鐨勯潪鍔ㄦ€侀〉闈㈤兘缂撳瓨锛宮enu 椤靛洜 query 鍙樺寲鐢?watch 鍒锋柊锛屼篃缂撳瓨
+  // level > 1 的非动态页面都缓存；Menu 页因 query 变化用 watch 刷新，也缓存
   return ['HomeIndex', 'HomeMenu', 'ClientList', 'StaffList']
 })
 
 const onTabChange = (name) => {
   const tab = tabbarList.find((item) => item.name === name)
   if (tab && tab.path !== route.path) {
-    // Tab 鍒囨崲涓嶅叆鍘嗗彶锛岄伩鍏嶉噸澶嶇偣鍑诲悗鍔ㄧ敾鏂瑰悜閿欎贡
+    // Tab 切换不入历史，避免重复点击后动画方向错乱
     router.replace(tab.path)
   }
 }

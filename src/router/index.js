@@ -43,7 +43,7 @@ const routes = [
   defineRoute({
     path: '/login',
     name: 'Login',
-    title: '鐧诲綍',
+    title: '登录',
     component: () => import('@/views/login/index.vue'),
     meta: {
       index: 1,
@@ -56,7 +56,7 @@ const routes = [
   defineRoute({
     path: '/home',
     name: 'Home',
-    title: '棣栭〉',
+    title: '首页',
     component: () => import('@/views/home/index.vue'),
     meta: {
       index: 1,
@@ -76,7 +76,7 @@ const routes = [
   defineRoute({
     path: '/home/menu',
     name: 'HomeMenu',
-    title: '鍔熻兘鑿滃崟',
+    title: '功能菜单',
     component: () => import('@/views/home/menu/index.vue'),
     meta: {
       index: 11,
@@ -85,7 +85,7 @@ const routes = [
   defineRoute({
     path: '/home/order',
     name: 'HomeOrder',
-    title: '璁㈠崟绠＄悊',
+    title: '订单管理',
     component: () => import('@/views/home/order/index.vue'),
     meta: {
       index: 11,
@@ -97,7 +97,7 @@ const routes = [
   defineRoute({
     path: '/home/order/search',
     name: 'HomeOrderSearch',
-    title: '璁㈠崟鎼滅储',
+    title: '订单搜索',
     component: () => import('@/views/home/order/search/index.vue'),
     meta: {
       index: 111,
@@ -107,7 +107,7 @@ const routes = [
   defineRoute({
     path: '/home/order/create',
     name: 'HomeOrderCreate',
-    title: '鏂板缓璁㈠崟',
+    title: '新建订单',
     component: () => import('@/views/home/order/create/index.vue'),
     meta: {
       index: 111,
@@ -117,7 +117,7 @@ const routes = [
   defineRoute({
     path: '/home/order/detail',
     name: 'HomeOrderDetail',
-    title: '璁㈠崟璇︽儏',
+    title: '订单详情',
     component: () => import('@/views/home/order/detail/index.vue'),
     meta: {
       index: 111,
@@ -138,7 +138,7 @@ const routes = [
   defineRoute({
     path: '/home/order/pattern-select',
     name: 'HomeOrderPatternSelect',
-    title: '閫夋嫨娆惧彿',
+    title: '选择款号',
     component: () => import('@/views/home/order/pattern_select/index.vue'),
     meta: {
       index: 111,
@@ -148,7 +148,7 @@ const routes = [
   defineRoute({
     path: '/home/order/pay',
     name: 'HomeOrderPay',
-    title: '璁㈠崟鏀舵',
+    title: '订单收款',
     component: () => import('@/views/home/order/pay/index.vue'),
     meta: {
       index: 111,
@@ -158,7 +158,7 @@ const routes = [
   defineRoute({
     path: '/home/order/ship',
     name: 'HomeOrderShip',
-    title: '璁㈠崟鍙戣揣',
+    title: '订单发货',
     component: () => import('@/views/home/order/ship/index.vue'),
     meta: {
       index: 111,
@@ -168,7 +168,7 @@ const routes = [
   defineRoute({
     path: '/home/order/timeline',
     name: 'HomeOrderTimeline',
-    title: '璁㈠崟鏃ュ織',
+    title: '订单日志',
     component: () => import('@/views/home/order/timeline/index.vue'),
     meta: {
       index: 111,
@@ -178,7 +178,7 @@ const routes = [
   defineRoute({
     path: '/home/client',
     name: 'HomeClient',
-    title: '瀹㈡埛绠＄悊',
+    title: '客户管理',
     component: () => import('@/views/home/client/index.vue'),
     meta: {
       index: 11,
@@ -190,7 +190,7 @@ const routes = [
   defineRoute({
     path: '/home/client/search',
     name: 'HomeClientSearch',
-    title: '瀹㈡埛鎼滅储',
+    title: '客户搜索',
     component: () => import('@/views/home/client/search/index.vue'),
     meta: {
       index: 111,
@@ -200,7 +200,7 @@ const routes = [
   defineRoute({
     path: '/home/client/detail',
     name: 'HomeClientDetail',
-    title: '瀹㈡埛璇︽儏',
+    title: '客户详情',
     component: () => import('@/views/home/client/detail/index.vue'),
     meta: {
       index: 111,
@@ -253,7 +253,7 @@ const routes = [
   defineRoute({
     path: '/home/patter-library-add',
     name: 'HomePatterLibraryAdd',
-    title: '鏂板鏍锋澘',
+    title: '新增模板',
     component: () => import('@/views/home/patter_library_add/index.vue'),
     meta: {
       index: 11,
@@ -283,7 +283,7 @@ const routes = [
   defineRoute({
     path: '/profile',
     name: 'Profile',
-    title: '鎴戠殑',
+    title: '我的',
     component: () => import('@/views/profile/index.vue'),
     meta: {
       index: 1,
@@ -294,7 +294,7 @@ const routes = [
   defineRoute({
     path: '/profile/settings',
     name: 'ProfileSettings',
-    title: '璁剧疆',
+    title: '设置',
     component: () => import('@/views/profile/settings/index.vue'),
     meta: {
       index: 11,
@@ -303,7 +303,7 @@ const routes = [
   defineRoute({
     path: '/profile/info',
     name: 'ProfileInfo',
-    title: '涓汉淇℃伅',
+    title: '个人信息',
     component: () => import('@/views/profile/info/index.vue'),
     meta: {
       index: 11,
@@ -312,7 +312,7 @@ const routes = [
   defineRoute({
     path: '/profile/password',
     name: 'ProfilePassword',
-    title: '瀵嗙爜淇敼',
+    title: '密码修改',
     component: () => import('@/views/profile/password/index.vue'),
     meta: {
       index: 11,
@@ -322,7 +322,7 @@ const routes = [
   defineRoute({
     path: '/profile/avatar',
     name: 'ProfileAvatar',
-    title: '淇敼澶村儚',
+    title: '修改头像',
     component: () => import('@/views/profile/avatar/index.vue'),
     meta: {
       index: 11,
