@@ -248,7 +248,7 @@ const routes = [
   defineRoute({
     path: '/home/pattern-library/detail',
     name: 'HomePatternLibraryDetail',
-    title: '鐗堝紡璇︽儏',
+    title: '版式详情',
     component: () => import('@/views/home/pattern_library/detail/index.vue'),
     meta: {
       index: 111,
