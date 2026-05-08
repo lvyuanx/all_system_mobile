@@ -5,6 +5,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getPatternList } from '@/api/pattern'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 import { useOrderCreateStore } from '@/stores/orderCreate'
 
 const route = useRoute()
@@ -71,7 +72,7 @@ const selectPattern = (item) => {
 }
 
 const onClickLeft = () => {
-  router.back()
+  goBackWithTransition(router, '/home/order/create')
 }
 
 watch(search, () => {

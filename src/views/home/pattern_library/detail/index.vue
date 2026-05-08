@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast, showLoadingToast, closeToast, showConfirmDialog, showImagePreview } from 'vant'
 import { getPatternInfo, getPatternList, updatePattern, deactivatePattern, activatePattern } from '@/api/pattern'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 
 const route = useRoute()
 const router = useRouter()
@@ -191,12 +192,7 @@ const removeTag = (tag) => {
 }
 
 const onClickLeft = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) {
-    router.back()
-    return
-  }
-  router.replace('/home/pattern-library')
+  goBackWithTransition(router, '/home/pattern-library')
 }
 
 onMounted(loadDetail)

@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppCustomNavBar from '@/components/AppCustomNavBar.vue'
+import { consumeNextTransition, goBackWithTransition, NAVIGATION_TRANSITION } from '@/utils/navigationTransition'
 
 import 'vant/lib/index.css'
 
@@ -9,8 +10,7 @@ const router = useRouter()
 const route = useRoute()
 const transitionName = ref('ios-none')
 
-const pageStack = []
-let lastHistoryPosition = window.history.state?.position ?? 0
+const lastHistoryPosition = ref(window.history.state?.position ?? 0)
 
 const tabbarList = [
   { name: 'home', title: '首页', icon: 'home-o', path: '/home' },
@@ -38,66 +38,35 @@ const navBarShowBack = computed(() => route.meta.showBack !== false)
 const navBarBackground = computed(() => route.meta.navBarBackground || 'var(--color-background)')
 
 router.beforeEach((to, from, next) => {
-  const toPath = to.fullPath
-  const fromPath = from.fullPath
-  const toLevel = Number(to.meta?.index ?? to.meta?.level ?? 0)
-  const fromLevel = Number(from.meta?.index ?? from.meta?.level ?? 0)
+  const requestedTransition = consumeNextTransition()
   const historyPosition = window.history.state?.position
   const hasHistoryPosition = typeof historyPosition === 'number'
 
-  if (toPath === fromPath) {
-    transitionName.value = 'ios-none'
-    next()
-    return
-  }
-  // Query 参数变化不触发方向动画，避免“重进页面”感
-  if (to.path === from.path) {
-    transitionName.value = 'ios-none'
+  if (requestedTransition === NAVIGATION_TRANSITION.BACK) {
+    transitionName.value = NAVIGATION_TRANSITION.BACK
     next()
     return
   }
 
   if (!from.name) {
-    transitionName.value = 'ios-none'
-    if (!pageStack.includes(toPath)) pageStack.push(toPath)
-    if (hasHistoryPosition) lastHistoryPosition = historyPosition
+    transitionName.value = NAVIGATION_TRANSITION.NONE
+    if (hasHistoryPosition) lastHistoryPosition.value = historyPosition
     next()
     return
   }
 
-  if (toLevel === 1 && fromLevel === 1) {
-    transitionName.value = 'ios-none'
-    const existed = pageStack.lastIndexOf(toPath)
-    if (existed === -1) {
-      pageStack.push(toPath)
-    } else {
-      pageStack.splice(existed + 1)
-    }
-    if (hasHistoryPosition) lastHistoryPosition = historyPosition
+  // Query 参数变化不触发方向动画，避免“重进页面”感
+  if (to.path === from.path) {
+    transitionName.value = NAVIGATION_TRANSITION.NONE
+    if (hasHistoryPosition) lastHistoryPosition.value = historyPosition
     next()
     return
   }
 
-  if (hasHistoryPosition && historyPosition !== lastHistoryPosition) {
-    transitionName.value = historyPosition < lastHistoryPosition ? 'ios-back' : 'ios-forward'
-    lastHistoryPosition = historyPosition
-    next()
-    return
-  }
-
-  const toIndex = pageStack.lastIndexOf(toPath)
-  const fromIndex = pageStack.lastIndexOf(fromPath)
-
-  if (toIndex !== -1 && toIndex < fromIndex) {
-    transitionName.value = 'ios-back'
-    pageStack.splice(toIndex + 1)
+  if (hasHistoryPosition && historyPosition < lastHistoryPosition.value) {
+    transitionName.value = NAVIGATION_TRANSITION.BACK
   } else {
-    transitionName.value = toLevel < fromLevel ? 'ios-back' : 'ios-forward'
-    if (toIndex === -1) {
-      pageStack.push(toPath)
-    } else {
-      pageStack.splice(toIndex + 1)
-    }
+    transitionName.value = NAVIGATION_TRANSITION.FORWARD
   }
 
   next()
@@ -106,7 +75,7 @@ router.beforeEach((to, from, next) => {
 router.afterEach(() => {
   const historyPosition = window.history.state?.position
   if (typeof historyPosition === 'number') {
-    lastHistoryPosition = historyPosition
+    lastHistoryPosition.value = historyPosition
   }
 })
 
@@ -132,13 +101,8 @@ const onAfterEnter = () => {
 }
 
 const onClickNavLeft = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) {
-    router.back()
-    return
-  }
   const fallbackPath = route.meta.parentPath || '/home'
-  router.replace(fallbackPath)
+  goBackWithTransition(router, fallbackPath)
 }
 </script>
 

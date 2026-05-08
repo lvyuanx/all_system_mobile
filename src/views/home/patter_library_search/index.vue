@@ -5,6 +5,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { imageSearch, imageSearchQuota } from '@/api/pattern_search'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 
 const route = useRoute()
 const router = useRouter()
@@ -136,12 +137,7 @@ const scoreLevelClass = (score) => {
 }
 
 const onClickLeft = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) {
-    router.back()
-    return
-  }
-  router.replace('/home')
+  goBackWithTransition(router, '/home')
 }
 
 const onScroll = () => {

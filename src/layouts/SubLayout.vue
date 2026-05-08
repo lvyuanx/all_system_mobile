@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 
 const router = useRouter()
 const route = useRoute()
@@ -12,7 +13,7 @@ const showBack = computed(() => {
 
 // 返回上一页
 const onClickLeft = () => {
-  router.back()
+  goBackWithTransition(router, route.meta.parentPath || '/home')
 }
 
 // 页面标题

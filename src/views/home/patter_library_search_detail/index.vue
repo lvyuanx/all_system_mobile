@@ -5,6 +5,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast, showImagePreview } from 'vant'
 import { patternSearchByFilename, orderListByPattern } from '@/api/pattern_search'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 
 const route = useRoute()
 const router = useRouter()
@@ -25,9 +26,7 @@ const orders = ref([])
 const orderTotal = ref(0)
 
 const onClickLeft = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) { router.back(); return }
-  router.replace('/home/patter-library-search')
+  goBackWithTransition(router, '/home/patter-library-search')
 }
 
 const goPatternDetail = () => {

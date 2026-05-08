@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getClientInfo } from '@/api/client'
 import { formatMoney } from '@/utils/orderConstants'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
@@ -46,9 +47,7 @@ const fetchDetail = async () => {
 }
 
 const onClickLeft = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) { router.back(); return }
-  router.replace('/home/client')
+  goBackWithTransition(router, '/home/client')
 }
 
 const clientInitial = computed(() => {

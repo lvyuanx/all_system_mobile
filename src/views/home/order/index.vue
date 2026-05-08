@@ -11,6 +11,7 @@ import {
 } from '@/api/order'
 import { ORDER_STATUS, formatMoney } from '@/utils/orderConstants'
 import AppSearchNavBar from '@/components/AppSearchNavBar.vue'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 import { useOrderSearchStore } from '@/stores/orderSearch'
 import { useUserStore } from '@/stores/user'
 
@@ -315,12 +316,7 @@ const goCreate = () => {
 }
 
 const onNavBack = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) {
-    router.back()
-    return
-  }
-  router.replace('/home')
+  goBackWithTransition(router, '/home')
 }
 
 const onCardAction = (action, order) => {

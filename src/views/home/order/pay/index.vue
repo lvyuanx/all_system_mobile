@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { getOrderInfo, getOrderPayCaList, getPayMethodTypeList, payOrder } from '@/api/order'
 import { formatMoney, toNumber } from '@/utils/orderConstants'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 
 const route = useRoute()
 const router = useRouter()
@@ -123,9 +124,7 @@ const onSubmit = async () => {
 }
 
 const onClickLeft = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) { router.back(); return }
-  router.replace('/home/order')
+  goBackWithTransition(router, '/home/order')
 }
 
 // ===== 滚动折叠 navbar =====

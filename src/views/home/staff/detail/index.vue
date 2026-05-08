@@ -11,6 +11,7 @@ import {
   getStaffGroupOptions,
   updateStaffGroups,
 } from '@/api/staff'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 
 const route = useRoute()
 const router = useRouter()
@@ -86,12 +87,7 @@ const fetchDetail = async () => {
 }
 
 const onClickLeft = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) {
-    router.back()
-    return
-  }
-  router.replace('/home/staff')
+  goBackWithTransition(router, '/home/staff')
 }
 
 const onToggleStatus = async () => {

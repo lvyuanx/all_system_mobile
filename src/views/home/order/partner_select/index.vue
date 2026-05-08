@@ -5,6 +5,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getClientAddressList, getSiteAddressList } from '@/api/order'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 import { useOrderCreateStore } from '@/stores/orderCreate'
 
 const route = useRoute()
@@ -93,7 +94,7 @@ const selectItem = (item) => {
 }
 
 const onClickLeft = () => {
-  router.back()
+  goBackWithTransition(router, '/home/order/create')
 }
 
 watch([type, siteId], () => {

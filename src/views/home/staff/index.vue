@@ -5,6 +5,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import AppSearchNavBar from '@/components/AppSearchNavBar.vue'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 import {
   activateStaff,
   deactivateStaff,
@@ -168,12 +169,7 @@ const applyFilter = () => {
 }
 
 const onNavBack = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) {
-    router.back()
-    return
-  }
-  router.replace('/home')
+  goBackWithTransition(router, '/home')
 }
 
 const toGroupList = (groupNames) => {

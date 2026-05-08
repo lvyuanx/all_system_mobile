@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getClientList } from '@/api/client'
 import { formatMoney } from '@/utils/orderConstants'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 import { useUserStore } from '@/stores/user'
 import { useClientSearchStore } from '@/stores/clientSearch'
 
@@ -90,7 +91,7 @@ const onRefresh = async () => {
 }
 
 const onNavBack = () => {
-  router.back()
+  goBackWithTransition(router, '/home')
 }
 
 const goSearch = () => {

@@ -7,6 +7,7 @@ import { showConfirmDialog, showToast } from 'vant'
 import { createOrder, getDeliveryList, getOrderTypeList } from '@/api/order'
 import { getCurSiteOptions } from '@/api/site'
 import { formatMoney } from '@/utils/orderConstants'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 import { useOrderCreateStore } from '@/stores/orderCreate'
 
 const router = useRouter()
@@ -152,14 +153,13 @@ const onScroll = () => {
   })
 }
 
+const backToOrderList = () => {
+  goBackWithTransition(router, '/home/order')
+}
+
 const onClickLeft = async () => {
   if (!orderCreateStore.isDirty) {
-    const hasBack = Boolean(window.history.state?.back)
-    if (hasBack) {
-      router.back()
-      return
-    }
-    router.replace('/home/order')
+    backToOrderList()
     return
   }
 
@@ -169,12 +169,7 @@ const onClickLeft = async () => {
       message: '当前订单草稿尚未提交，确认放弃本次编辑吗？',
     })
     orderCreateStore.resetDraft()
-    const hasBack = Boolean(window.history.state?.back)
-    if (hasBack) {
-      router.back()
-      return
-    }
-    router.replace('/home/order')
+    backToOrderList()
   } catch {
     return
   }

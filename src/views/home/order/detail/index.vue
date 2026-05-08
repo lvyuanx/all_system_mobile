@@ -16,6 +16,7 @@ import {
   startProduction,
 } from '@/api/order'
 import { ORDER_STATUS, formatMoney } from '@/utils/orderConstants'
+import { goBackWithTransition } from '@/utils/navigationTransition'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
@@ -243,12 +244,7 @@ const mergedFlow = computed(() => {
 })
 
 const onClickLeft = () => {
-  const hasBack = Boolean(window.history.state?.back)
-  if (hasBack) {
-    router.back()
-    return
-  }
-  router.replace('/home/order')
+  goBackWithTransition(router, '/home/order')
 }
 
 const goClientList = (company) => {
