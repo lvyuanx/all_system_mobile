@@ -111,6 +111,7 @@ const routes = [
     component: () => import('@/views/home/order/create/index.vue'),
     meta: {
       index: 111,
+      showNavBar: false,
       navBarBackground: '#f2f3f7',
     },
   }),
@@ -132,6 +133,7 @@ const routes = [
     component: () => import('@/views/home/order/partner_select/index.vue'),
     meta: {
       index: 111,
+      showNavBar: false,
       navBarBackground: '#f4f6fb',
     },
   }),
@@ -142,6 +144,7 @@ const routes = [
     component: () => import('@/views/home/order/pattern_select/index.vue'),
     meta: {
       index: 111,
+      showNavBar: false,
       navBarBackground: '#f4f6fb',
     },
   }),

@@ -112,7 +112,7 @@ router.afterEach(() => {
 
 const cachedComponents = computed(() => {
   // level > 1 的非动态页面都缓存；Menu 页因 query 变化用 watch 刷新，也缓存
-  return ['HomeIndex', 'HomeMenu', 'ClientList', 'StaffList']
+  return ['HomeIndex', 'HomeMenu', 'ClientList', 'StaffList', 'OrderCreate']
 })
 
 const onTabChange = (name) => {

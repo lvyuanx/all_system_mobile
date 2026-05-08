@@ -86,6 +86,11 @@ const canPay = computed(() => {
   return payable - paid > 0.0001
 })
 
+const canOpenPayDetail = computed(() => {
+  if (!detail.value) return false
+  return Number(detail.value.order_status) !== ORDER_STATUS.CANCELED
+})
+
 const permCodes = computed(() =>
   (userStore.permPacks || [])
     .map((p) => p.pack_code || p.packCode)
@@ -130,7 +135,7 @@ const actionButtons = computed(() => {
   if (status === ORDER_STATUS.SHIPPED) {
     actions.push({ key: 'complete', label: '签收完成', type: 'primary' })
   }
-  if (canPay.value && canViewFinanceOps.value) {
+  if (canOpenPayDetail.value && canViewFinanceOps.value) {
     actions.push({ key: 'pay', label: '收款', type: 'warning', route: '/home/order/pay' })
   }
 
@@ -344,7 +349,7 @@ onUnmounted(() => {
             <van-icon name="bill-o" class="card-icon" />
             <span class="card-title">支付明细</span>
             <van-button
-              v-if="canViewFinanceOps && canPay"
+              v-if="canViewFinanceOps && canOpenPayDetail"
               size="small"
               round
               class="pay-btn"

@@ -1,20 +1,23 @@
-﻿<script setup>
+<script setup>
 defineOptions({ name: 'OrderPatternSelect' })
+
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getPatternList } from '@/api/pattern'
+import { useOrderCreateStore } from '@/stores/orderCreate'
 
 const route = useRoute()
 const router = useRouter()
+const orderCreateStore = useOrderCreateStore()
 
-const DRAFT_KEY = 'order_create_draft'
+const pageRef = ref(null)
 const search = ref('')
 const loading = ref(false)
 const finished = ref(false)
 const page = ref(1)
-const PAGE_SIZE = 15
 const list = ref([])
+const PAGE_SIZE = 15
 
 let searchTimer = null
 
@@ -63,28 +66,11 @@ const selectPattern = (item) => {
   const idxRaw = route.query.index
   const idx = Number(idxRaw)
   const targetIndex = Number.isNaN(idx) ? 0 : Math.max(0, idx)
-  try {
-    const raw = sessionStorage.getItem(DRAFT_KEY)
-    const draft = raw ? JSON.parse(raw) : {}
-    const items = Array.isArray(draft.items) ? draft.items : []
-    if (!items[targetIndex]) {
-      items[targetIndex] = {
-        pattern_code: '',
-        color: '',
-        count: 1,
-        unit_price: '',
-        discount_price: '0',
-        total_unit: '',
-        memo: '',
-      }
-    }
-    items[targetIndex] = {
-      ...items[targetIndex],
-      pattern_code: item.pattern_code || '',
-    }
-    draft.items = items
-    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
-  } catch {}
+  orderCreateStore.applyPatternToItem(targetIndex, item)
+  router.back()
+}
+
+const onClickLeft = () => {
   router.back()
 }
 
@@ -96,98 +82,118 @@ watch(search, () => {
   }, 250)
 })
 
-onMounted(loadMore)
+onMounted(() => {
+  orderCreateStore.initializeDraft()
+  loadMore()
+})
 
 onBeforeUnmount(() => {
-  if (searchTimer) {
-    clearTimeout(searchTimer)
-    searchTimer = null
-  }
+  if (searchTimer) clearTimeout(searchTimer)
 })
 </script>
 
 <template>
-  <div class="page">
-    <div class="header">
-      <div class="title">选择款号</div>
-      <div class="subtitle">选择版号快速填充订单项</div>
+  <div ref="pageRef" class="page">
+    <div class="page-topbar">
+      <div class="topbar-inner">
+        <button class="back-btn" @click="onClickLeft">
+          <van-icon name="arrow-left" size="18" />
+        </button>
+        <div class="topbar-title">选择款号</div>
+        <div class="topbar-spacer"></div>
+      </div>
     </div>
 
-    <div class="search-wrap">
-      <div class="search-inner">
+    <div class="content">
+      <div class="search-card">
         <van-icon name="search" class="search-icon" />
-        <input v-model="search" class="search-input" placeholder="搜索款号 / 备注" />
+        <input v-model="search" class="search-input" placeholder="搜索款号、备注或关键词" />
       </div>
-    </div>
 
-    <van-list
-      v-model:loading="loading"
-      :finished="finished"
-      finished-text="没有更多了"
-      @load="loadMore"
-      class="list"
-    >
-      <div v-for="item in list" :key="item.pattern_id" class="pattern-card" @click="selectPattern(item)">
-        <van-image
-          :src="item.main_image"
-          width="64"
-          height="64"
-          fit="cover"
-          class="thumb"
-        />
-        <div class="card-body">
-          <div class="code">{{ item.pattern_code }}</div>
-          <div class="memo">{{ item.pattern_memo || '暂无备注' }}</div>
+      <van-list
+        v-model:loading="loading"
+        :finished="finished"
+        finished-text="没有更多了"
+        @load="loadMore"
+      >
+        <div v-for="item in list" :key="item.pattern_id" class="pattern-card" @click="selectPattern(item)">
+          <van-image
+            :src="item.main_image"
+            width="68"
+            height="68"
+            fit="cover"
+            class="thumb"
+          />
+          <div class="card-body">
+            <div class="code-row">
+              <div class="code">{{ item.pattern_code || '-' }}</div>
+              <div class="select-tag">回填</div>
+            </div>
+            <div class="memo">{{ item.pattern_memo || '暂无备注，可在创建页继续补充订单项说明。' }}</div>
+          </div>
         </div>
-        <van-icon name="arrow" class="arrow-icon" />
-      </div>
 
-      <div v-if="!loading && list.length === 0" class="empty">
-        <van-empty description="暂无款号" />
-      </div>
-    </van-list>
+        <div v-if="!loading && list.length === 0" class="empty">
+          <van-empty description="暂无款号" />
+        </div>
+      </van-list>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .page {
-  min-height: 100%;
+  min-height: 100vh;
+  overflow-y: auto;
   background: #f4f6fb;
-  padding-bottom: 20px;
 }
 
-.header {
-  padding: 20px 16px 12px;
-  background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
-  border-radius: 0 0 22px 22px;
-  box-shadow: 0 8px 20px rgba(31, 42, 68, 0.08);
+.page-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: env(safe-area-inset-top);
+  background: #f4f6fb;
 }
 
-.title {
-  font-size: 18px;
-  font-weight: 800;
+.topbar-inner {
+  height: 46px;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  padding: 0 8px 0 4px;
+}
+
+.back-btn {
+  border: 0;
+  background: transparent;
   color: #1f2a44;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.subtitle {
-  margin-top: 4px;
-  font-size: 12px;
-  color: rgba(31, 42, 68, 0.55);
+.topbar-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2a44;
+  text-align: center;
 }
 
-.search-wrap {
-  padding: 10px 16px 4px;
+.content {
+  padding: 10px 12px 12px;
 }
 
-.search-inner {
+.search-card {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 40px;
   background: #fff;
-  border-radius: 20px;
-  padding: 0 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 20px rgba(31, 42, 68, 0.08);
+  margin-bottom: 12px;
 }
 
 .search-icon {
@@ -200,66 +206,67 @@ onBeforeUnmount(() => {
   border: none;
   outline: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
   color: #1f2a44;
-}
-
-.list {
-  padding: 8px 16px 24px;
 }
 
 .pattern-card {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 14px;
   margin-bottom: 10px;
   background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 4px 16px rgba(31, 42, 68, 0.08);
-  cursor: pointer;
-}
-
-.pattern-card:active {
-  opacity: 0.85;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(31, 42, 68, 0.08);
 }
 
 .thumb {
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
   background: #f3f4f6;
+  flex-shrink: 0;
 }
 
 .card-body {
   flex: 1;
   min-width: 0;
+}
+
+.code-row {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .code {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: #1f2a44;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.select-tag {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .memo {
+  margin-top: 8px;
   font-size: 12px;
-  color: rgba(31, 42, 68, 0.6);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.arrow-icon {
-  color: #cbd5f5;
+  line-height: 1.6;
+  color: #475569;
+  word-break: break-all;
 }
 
 .empty {
-  margin-top: 40px;
+  margin-top: 48px;
 }
 </style>

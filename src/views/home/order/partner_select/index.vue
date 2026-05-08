@@ -1,14 +1,16 @@
-﻿<script setup>
+<script setup>
 defineOptions({ name: 'OrderPartnerSelect' })
+
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getClientAddressList, getSiteAddressList } from '@/api/order'
+import { useOrderCreateStore } from '@/stores/orderCreate'
 
 const route = useRoute()
 const router = useRouter()
+const orderCreateStore = useOrderCreateStore()
 
-const DRAFT_KEY = 'order_create_draft'
 const type = computed(() => (route.query.type === 'shipping' ? 'shipping' : 'receiver'))
 const siteId = computed(() => {
   const raw = route.query.site_id
@@ -16,16 +18,17 @@ const siteId = computed(() => {
   const num = Number(raw)
   return Number.isNaN(num) ? null : num
 })
+const pageTitle = computed(() => (type.value === 'shipping' ? '选择发货方' : '选择收货方'))
 
+const pageRef = ref(null)
 const search = ref('')
-let searchTimer = null
 const loading = ref(false)
 const finished = ref(false)
 const page = ref(1)
-const PAGE_SIZE = 15
 const items = ref([])
+const PAGE_SIZE = 15
 
-const titleText = computed(() => (type.value === 'shipping' ? '选择发货方' : '选择收货方'))
+let searchTimer = null
 
 const resetList = () => {
   page.value = 1
@@ -71,22 +74,25 @@ const loadMore = async () => {
 }
 
 const selectItem = (item) => {
-  try {
-    const raw = sessionStorage.getItem(DRAFT_KEY)
-    const draft = raw ? JSON.parse(raw) : {}
-    if (type.value === 'receiver') {
-      draft.receiver_name = item.receiver_name || ''
-      draft.receiver_company = item.receiver_company || ''
-      draft.receiver_phone = item.receiver_phone || ''
-      draft.receiver_address = item.receiver_address || ''
-    } else {
-      draft.shipping_party = item.shipping_party || ''
-      draft.shipping_party_company = item.shipping_party_company || ''
-      draft.shipping_party_phone = item.shipping_party_phone || ''
-      draft.shipping_party_address = item.shipping_party_address || ''
-    }
-    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
-  } catch {}
+  if (type.value === 'shipping') {
+    orderCreateStore.updateShippingParty({
+      shipping_party: item.shipping_party || '',
+      shipping_party_company: item.shipping_party_company || '',
+      shipping_party_phone: item.shipping_party_phone || '',
+      shipping_party_address: item.shipping_party_address || '',
+    })
+  } else {
+    orderCreateStore.updateReceiver({
+      receiver_name: item.receiver_name || '',
+      receiver_company: item.receiver_company || '',
+      receiver_phone: item.receiver_phone || '',
+      receiver_address: item.receiver_address || '',
+    })
+  }
+  router.back()
+}
+
+const onClickLeft = () => {
   router.back()
 }
 
@@ -104,108 +110,133 @@ watch(search, () => {
 })
 
 onMounted(() => {
+  orderCreateStore.initializeDraft()
   loadMore()
 })
 
 onBeforeUnmount(() => {
-  if (searchTimer) {
-    clearTimeout(searchTimer)
-    searchTimer = null
-  }
+  if (searchTimer) clearTimeout(searchTimer)
 })
 </script>
 
 <template>
-  <div class="page">
-    <div class="header">
-      <div class="title">{{ titleText }}</div>
-      <div class="subtitle">选择历史信息快速填充</div>
+  <div ref="pageRef" class="page">
+    <div class="page-topbar">
+      <div class="topbar-inner">
+        <button class="back-btn" @click="onClickLeft">
+          <van-icon name="arrow-left" size="18" />
+        </button>
+        <div class="topbar-title">{{ pageTitle }}</div>
+        <div class="topbar-spacer"></div>
+      </div>
     </div>
 
-    <div class="search-wrap">
-      <div class="search-inner">
+    <div class="content">
+      <div class="search-card">
         <van-icon name="search" class="search-icon" />
         <input
           v-model="search"
           class="search-input"
-          placeholder="搜索名称或公司"
+          placeholder="搜索名称、公司、电话或地址"
         />
       </div>
-    </div>
 
-    <van-list
-      v-model:loading="loading"
-      :finished="finished"
-      finished-text="没有更多了"
-      @load="loadMore"
-      class="list"
-    >
-      <div
-        v-for="(item, idx) in items"
-        :key="idx"
-        class="option-card"
-        @click="selectItem(item)"
+      <van-list
+        v-model:loading="loading"
+        :finished="finished"
+        finished-text="没有更多了"
+        @load="loadMore"
       >
-        <template v-if="type === 'shipping'">
-          <div class="option-name">{{ item.shipping_party || '-' }}</div>
-          <div class="option-company">{{ item.shipping_party_company || '-' }}</div>
-          <div class="option-meta">{{ item.shipping_party_phone || '-' }}</div>
-          <div class="option-meta">{{ item.shipping_party_address || '-' }}</div>
-        </template>
-        <template v-else>
-          <div class="option-name">{{ item.receiver_name || '-' }}</div>
-          <div class="option-company">{{ item.receiver_company || '-' }}</div>
-          <div class="option-meta">{{ item.receiver_phone || '-' }}</div>
-          <div class="option-meta">{{ item.receiver_address || '-' }}</div>
-        </template>
-      </div>
+        <div
+          v-for="(item, idx) in items"
+          :key="idx"
+          class="option-card"
+          @click="selectItem(item)"
+        >
+          <div class="option-top">
+            <div class="option-name">
+              {{ type === 'shipping' ? (item.shipping_party || '-') : (item.receiver_name || '-') }}
+            </div>
+            <div class="option-badge">{{ type === 'shipping' ? '发货方' : '收货方' }}</div>
+          </div>
+          <div class="option-company">
+            {{ type === 'shipping' ? (item.shipping_party_company || '暂无公司') : (item.receiver_company || '暂无公司') }}
+          </div>
+          <div class="option-meta">
+            <van-icon name="phone-o" class="meta-icon" />
+            <span>{{ type === 'shipping' ? (item.shipping_party_phone || '-') : (item.receiver_phone || '-') }}</span>
+          </div>
+          <div class="option-meta option-meta--address">
+            <van-icon name="location-o" class="meta-icon" />
+            <span>{{ type === 'shipping' ? (item.shipping_party_address || '-') : (item.receiver_address || '-') }}</span>
+          </div>
+        </div>
 
-      <div v-if="!loading && items.length === 0" class="empty">
-        <van-empty description="暂无可选项" />
-      </div>
-    </van-list>
+        <div v-if="!loading && items.length === 0" class="empty">
+          <van-empty description="暂无可选地址" />
+        </div>
+      </van-list>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .page {
-  min-height: 100%;
+  --c-text: #1f2a44;
+  --c-sub: #475569;
+  --c-muted: #94a3b8;
+  --c-border: #e5e7eb;
+  min-height: 100vh;
+  overflow-y: auto;
   background: #f4f6fb;
-  padding-bottom: 20px;
 }
 
-.header {
-  padding: 20px 16px 12px;
-  background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
-  border-radius: 0 0 22px 22px;
-  box-shadow: 0 8px 20px rgba(31, 42, 68, 0.08);
+.page-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: env(safe-area-inset-top);
+  background: #f4f6fb;
 }
 
-.title {
-  font-size: 18px;
-  font-weight: 800;
+.topbar-inner {
+  height: 46px;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  padding: 0 8px 0 4px;
+}
+
+.back-btn {
+  border: 0;
+  background: transparent;
   color: #1f2a44;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.subtitle {
-  margin-top: 4px;
-  font-size: 12px;
-  color: rgba(31, 42, 68, 0.55);
+.topbar-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2a44;
+  text-align: center;
 }
 
-.search-wrap {
-  padding: 10px 16px 4px;
+.content {
+  padding: 10px 12px 12px;
 }
 
-.search-inner {
+.search-card {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 40px;
   background: #fff;
-  border-radius: 20px;
-  padding: 0 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 20px rgba(31, 42, 68, 0.08);
+  margin-bottom: 12px;
 }
 
 .search-icon {
@@ -218,41 +249,68 @@ onBeforeUnmount(() => {
   border: none;
   outline: none;
   background: transparent;
-  font-size: 13px;
-  color: #1f2a44;
-}
-
-.list {
-  padding: 8px 16px 24px;
+  font-size: 14px;
+  color: var(--c-text);
 }
 
 .option-card {
   background: #fff;
-  border-radius: 14px;
-  padding: 12px 14px;
+  border-radius: 16px;
+  padding: 14px 16px;
   margin-bottom: 10px;
-  box-shadow: 0 4px 16px rgba(31, 42, 68, 0.08);
-  cursor: pointer;
-  display: grid;
-  gap: 6px;
+  box-shadow: 0 8px 20px rgba(31, 42, 68, 0.08);
 }
 
-.option-card:active {
-  opacity: 0.85;
+.option-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .option-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  color: #1f2a44;
+  color: var(--c-text);
+}
+
+.option-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.1);
+  color: #0f766e;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .option-company {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--c-sub);
+}
+
+.option-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px;
   font-size: 12px;
-  color: rgba(31, 42, 68, 0.6);
+  line-height: 1.5;
+  color: var(--c-sub);
+}
+
+.option-meta--address span {
+  word-break: break-all;
+}
+
+.meta-icon {
+  color: var(--c-muted);
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .empty {
-  margin-top: 40px;
+  margin-top: 48px;
 }
 </style>
