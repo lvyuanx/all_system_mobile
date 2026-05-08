@@ -1,8 +1,20 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { showToast, showLoadingToast, closeToast, showConfirmDialog, showImagePreview } from 'vant'
-import { getPatternInfo, getPatternList, updatePattern, deactivatePattern, activatePattern } from '@/api/pattern'
+import {
+  showToast,
+  showLoadingToast,
+  closeToast,
+  showConfirmDialog,
+  showImagePreview,
+} from 'vant'
+import {
+  activatePattern,
+  deactivatePattern,
+  getPatternInfo,
+  getPatternList,
+  updatePattern,
+} from '@/api/pattern'
 import { goBackWithTransition } from '@/utils/navigationTransition'
 
 const route = useRoute()
@@ -41,6 +53,10 @@ const resolvePatternId = async () => {
   patternId = item?.pattern_id ?? null
 }
 
+const backToLibrary = () => {
+  goBackWithTransition(router, '/home/pattern-library')
+}
+
 const loadDetail = async () => {
   showLoadingToast({ message: '加载中...', forbidClick: true, duration: 0 })
   try {
@@ -48,7 +64,7 @@ const loadDetail = async () => {
     if (!patternId) {
       closeToast()
       showToast('版式不存在')
-      router.back()
+      backToLibrary()
       return
     }
     const res = await getPatternInfo(patternId, { loading: false })
@@ -92,7 +108,7 @@ const onMainImageDelete = () => {
 }
 
 // 辅图上传
-const onSubImageRead = (file) => {
+const onSubImageRead = () => {
   syncSubImages()
 }
 const onSubImageDelete = (_, { index }) => {
@@ -114,11 +130,10 @@ const onDeactivate = async () => {
   try {
     await deactivatePattern(patternId, { loading: false })
     showToast('已下架')
-    router.back()
+    backToLibrary()
   } catch {}
 }
 
-// 提交编辑
 // 重新上架
 const onActivate = async () => {
   try {
@@ -163,7 +178,10 @@ const onSubmit = async () => {
   }
 }
 
-const onEdit = () => { editing.value = true }
+const onEdit = () => {
+  editing.value = true
+}
+
 const onCancel = async () => {
   try {
     await showConfirmDialog({ title: '提示', message: '放弃编辑？' })
@@ -192,7 +210,11 @@ const removeTag = (tag) => {
 }
 
 const onClickLeft = () => {
-  goBackWithTransition(router, '/home/pattern-library')
+  if (editing.value) {
+    onCancel()
+    return
+  }
+  backToLibrary()
 }
 
 onMounted(loadDetail)
@@ -200,7 +222,6 @@ onMounted(loadDetail)
 
 <template>
   <div class="page">
-
     <div v-if="detail">
       <!-- 主图 Hero -->
       <div class="hero" @click="previewMain">
@@ -213,7 +234,7 @@ onMounted(loadDetail)
           class="hero-img"
         />
         <div v-else class="hero-empty">
-          <van-icon name="photo-o" size="48" color="#ccc" />
+          <van-icon name="photo-o" size="48" color="#cbd5e1" />
           <span>暂无主图</span>
         </div>
         <!-- 渐变遮罩 -->
@@ -358,14 +379,16 @@ onMounted(loadDetail)
         </div>
       </van-dialog>
     </div>
-
   </div>
 </template>
 
 <style scoped>
 .page {
   min-height: 100%;
-  background: #f2f3f7;
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 34%),
+    radial-gradient(circle at 90% 10%, rgba(14, 165, 233, 0.1), transparent 24%),
+    linear-gradient(180deg, #f3f6fb 0%, #f8fafc 100%);
   padding-bottom: 40px;
 }
 
@@ -374,18 +397,20 @@ onMounted(loadDetail)
   top: calc(12px + env(safe-area-inset-top));
   left: 12px;
   z-index: 10;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
   border: none;
-  background: rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #0f172a;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.72);
 }
 
 .hero-top-mask {
@@ -393,8 +418,8 @@ onMounted(loadDetail)
   top: 0;
   left: 0;
   right: 0;
-  height: 80px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.25), transparent);
+  height: 90px;
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.22), transparent);
   pointer-events: none;
 }
 
@@ -403,7 +428,7 @@ onMounted(loadDetail)
   position: relative;
   width: 100%;
   height: 260px;
-  background: #e8e8e8;
+  background: linear-gradient(180deg, #dbeafe 0%, #eff6ff 100%);
   cursor: pointer;
   overflow: hidden;
 }
@@ -419,7 +444,7 @@ onMounted(loadDetail)
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #ccc;
+  color: #94a3b8;
   font-size: 13px;
 }
 
@@ -427,12 +452,13 @@ onMounted(loadDetail)
   position: absolute;
   bottom: 12px;
   right: 12px;
-  background: rgba(0,0,0,0.3);
+  background: rgba(15, 23, 42, 0.32);
   border-radius: 20px;
   padding: 4px 10px;
   display: flex;
   align-items: center;
   gap: 4px;
+  backdrop-filter: blur(6px);
 }
 
 .status-badge {
@@ -440,88 +466,99 @@ onMounted(loadDetail)
   top: calc(12px + env(safe-area-inset-top));
   right: 12px;
   font-size: 11px;
-  font-weight: 600;
-  padding: 3px 10px;
+  font-weight: 700;
+  padding: 4px 10px;
   border-radius: 999px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
+  backdrop-filter: blur(6px);
 }
 
 .status-badge.active {
-  background: rgba(7, 193, 96, 0.15);
-  color: #07c160;
-  border: 1px solid rgba(7, 193, 96, 0.3);
+  background: rgba(34, 197, 94, 0.16);
+  color: #047857;
+  border: 1px solid rgba(34, 197, 94, 0.22);
 }
 
 .status-badge.inactive {
-  background: rgba(0,0,0,0.25);
-  color: rgba(255,255,255,0.9);
+  background: rgba(15, 23, 42, 0.3);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 /* ── 信息卡片 ── */
 .info-card {
   margin: -20px 14px 0;
-  background: #fff;
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 18px;
   padding: 18px 16px 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
   position: relative;
   z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
 }
 
 .info-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 14px;
 }
 
 .code-text {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1a1a2e;
-  letter-spacing: 0.5px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.4px;
 }
 
 .action-row {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
 }
 
-.btn-edit, .btn-deactivate, .btn-activate, .btn-cancel, .btn-save {
-  display: flex;
+.btn-edit,
+.btn-deactivate,
+.btn-activate,
+.btn-cancel,
+.btn-save {
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 999px;
   border: none;
   cursor: pointer;
 }
 
 .btn-edit {
-  background: #f0f1ff;
-  color: #5b6ef5;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .btn-deactivate {
-  background: #fff1f0;
-  color: #ff4d4f;
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .btn-activate {
-  background: rgba(7, 193, 96, 0.12);
-  color: #07c160;
+  background: #dcfce7;
+  color: #047857;
 }
 
 .btn-cancel {
-  background: #f5f5f5;
-  color: #888;
+  background: #f1f5f9;
+  color: #475569;
 }
 
 .btn-save {
-  background: linear-gradient(90deg, #5b6ef5, #8b5cf6);
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
   color: #fff;
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.18);
 }
 
 .btn-save:disabled {
@@ -532,37 +569,38 @@ onMounted(loadDetail)
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 8px 0;
-  border-top: 1px solid #f5f5f5;
+  padding: 10px 0;
+  border-top: 1px solid #eef2f7;
 }
 
 .info-label {
-  font-size: 13px;
-  color: #aaa;
+  font-size: 12px;
+  color: #94a3b8;
   flex-shrink: 0;
-  width: 32px;
+  width: 34px;
 }
 
 .info-value {
   font-size: 14px;
-  color: #333;
+  color: #334155;
   flex: 1;
+  line-height: 1.7;
 }
 
 .tag-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
 }
 
 .tag {
   font-size: 11px;
-  padding: 2px 10px;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: #f0f1ff;
-  color: #5b6ef5;
-  border: 1px solid rgba(91,110,245,0.2);
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.12);
 }
 
 .tag-edit-list {
@@ -571,13 +609,13 @@ onMounted(loadDetail)
   gap: 8px;
   padding: 10px 12px;
   margin: 6px 0 2px;
-  background: #f7f8ff;
-  border: 1px solid rgba(91, 110, 245, 0.12);
-  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 14px;
 }
 
 .tag-edit-list :deep(.van-tag) {
-  font-size: 13px;
+  font-size: 12px;
   padding: 4px 10px;
   border-radius: 999px;
 }
@@ -597,10 +635,10 @@ onMounted(loadDetail)
 
 .section-title {
   font-size: 13px;
-  font-weight: 600;
-  color: #888;
+  font-weight: 700;
+  color: #64748b;
   margin-bottom: 10px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 
 .img-swipe {
@@ -609,14 +647,48 @@ onMounted(loadDetail)
 
 .no-images {
   font-size: 13px;
-  color: #bbb;
+  color: #94a3b8;
   text-align: center;
   padding: 24px 0;
 }
 
 .swipe-img {
   display: block;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+:deep(.van-cell),
+:deep(.van-field),
+:deep(.van-cell-group) {
+  background: transparent;
+}
+
+:deep(.van-cell) {
+  color: #334155;
+}
+
+:deep(.van-cell__title) {
+  color: #64748b;
+}
+
+:deep(.van-field__control) {
+  color: #0f172a;
+}
+
+:deep(.van-uploader__upload),
+:deep(.van-uploader__preview) {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+:deep(.van-uploader__upload) {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+}
+
+:deep(.van-switch) {
+  transform: scale(0.98);
 }
 </style>

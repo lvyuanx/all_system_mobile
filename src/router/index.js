@@ -241,6 +241,8 @@ const routes = [
     component: () => import('@/views/home/pattern_library/index.vue'),
     meta: {
       index: 11,
+      showNavBar: false,
+      navBarBackground: '#f3f6fb',
     },
   }),
   defineRoute({

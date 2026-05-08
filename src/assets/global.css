@@ -664,12 +664,22 @@ body {
 .mobile-container .van-overlay,
 .mobile-container .van-popup,
 .mobile-container .van-picker,
-.mobile-container .van-dialog,
 .mobile-container .van-toast {
   max-width: 430px;
   left: 0 !important;
   right: 0 !important;
   margin: 0 auto;
+}
+
+.mobile-container .van-dialog {
+  max-width: 320px;
+}
+
+.mobile-container .van-dialog.van-popup--center {
+  left: 50% !important;
+  right: auto !important;
+  margin: 0 !important;
+  transform: translate3d(-50%, -50%, 0);
 }
 
 /* 覆盖特定组件的样式 */
@@ -694,11 +704,20 @@ body {
   .mobile-container .van-overlay,
   .mobile-container .van-popup,
   .mobile-container .van-picker,
-  .mobile-container .van-dialog,
   .mobile-container .van-toast {
     max-width: 100%;
     left: 0 !important;
     right: 0 !important;
     margin: 0;
+  }
+
+  .mobile-container .van-dialog {
+    max-width: calc(100% - 32px);
+  }
+
+  .mobile-container .van-dialog.van-popup--center {
+    left: 50% !important;
+    right: auto !important;
+    margin: 0 !important;
   }
 }
