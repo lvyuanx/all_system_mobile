@@ -187,6 +187,10 @@ onActivated(() => {
               <span>{{ client.client_phone || '-' }}</span>
             </div>
             <div class="meta-row">
+              <van-icon name="balance-pay" size="12" />
+              <span>结算方式 {{ client.settlement_method_str || '-' }}</span>
+            </div>
+            <div class="meta-row">
               <van-icon name="location-o" size="12" />
               <span class="text-ellipsis">{{ client.full_address || '-' }}</span>
             </div>

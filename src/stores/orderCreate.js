@@ -34,6 +34,19 @@ const createDefaultDraft = () => ({
   scroll_top: 0,
 })
 
+const createDefaultPreferences = () => ({
+  site_id: null,
+  site_name: '',
+  order_type: null,
+  order_type_label: '',
+  delivery_method: null,
+  delivery_method_label: '',
+  shipping_party: '',
+  shipping_party_company: '',
+  shipping_party_phone: '',
+  shipping_party_address: '',
+})
+
 const cloneDefaultDraft = () => ({
   ...createDefaultDraft(),
   items: [createEmptyItem()],
@@ -45,6 +58,7 @@ export const useOrderCreateStore = defineStore(
     const initialized = ref(false)
     const isDirty = ref(false)
     const draft = ref(cloneDefaultDraft())
+    const preferences = ref(createDefaultPreferences())
 
     const ensureItems = () => {
       if (!Array.isArray(draft.value.items) || draft.value.items.length === 0) {
@@ -71,9 +85,28 @@ export const useOrderCreateStore = defineStore(
       isDirty.value = value
     }
 
+    const syncPreferencesFromDraft = () => {
+      preferences.value = {
+        site_id: draft.value.site_id,
+        site_name: draft.value.site_name,
+        order_type: draft.value.order_type,
+        order_type_label: draft.value.order_type_label,
+        delivery_method: draft.value.delivery_method,
+        delivery_method_label: draft.value.delivery_method_label,
+        shipping_party: draft.value.shipping_party,
+        shipping_party_company: draft.value.shipping_party_company,
+        shipping_party_phone: draft.value.shipping_party_phone,
+        shipping_party_address: draft.value.shipping_party_address,
+      }
+    }
+
     const initializeDraft = () => {
       if (!initialized.value) {
-        draft.value = cloneDefaultDraft()
+        draft.value = {
+          ...cloneDefaultDraft(),
+          ...preferences.value,
+          items: [createEmptyItem()],
+        }
         initialized.value = true
         isDirty.value = false
         return
@@ -87,6 +120,7 @@ export const useOrderCreateStore = defineStore(
         ...draft.value,
         ...payload,
       }
+      syncPreferencesFromDraft()
       if (shouldMarkDirty) markDirty()
     }
 
@@ -99,6 +133,7 @@ export const useOrderCreateStore = defineStore(
         shipping_party_phone: payload.shipping_party_phone ?? draft.value.shipping_party_phone,
         shipping_party_address: payload.shipping_party_address ?? draft.value.shipping_party_address,
       }
+      syncPreferencesFromDraft()
       if (shouldMarkDirty) markDirty()
     }
 
@@ -268,8 +303,18 @@ export const useOrderCreateStore = defineStore(
       })),
     })
 
-    const resetDraft = () => {
-      draft.value = cloneDefaultDraft()
+    const resetDraft = (options = {}) => {
+      const { preservePreferences = false } = options
+      if (!preservePreferences) {
+        preferences.value = createDefaultPreferences()
+      }
+      draft.value = preservePreferences
+        ? {
+          ...cloneDefaultDraft(),
+          ...preferences.value,
+          items: [createEmptyItem()],
+        }
+        : cloneDefaultDraft()
       initialized.value = false
       isDirty.value = false
     }
@@ -285,6 +330,7 @@ export const useOrderCreateStore = defineStore(
       initialized,
       isDirty,
       draft,
+      preferences,
       totals,
       itemTotals,
       itemCount,
@@ -308,7 +354,7 @@ export const useOrderCreateStore = defineStore(
   {
     persist: {
       key: 'order_create_state',
-      paths: ['initialized', 'isDirty', 'draft'],
+      paths: ['initialized', 'isDirty', 'draft', 'preferences'],
       storage: localStorage,
     },
   },

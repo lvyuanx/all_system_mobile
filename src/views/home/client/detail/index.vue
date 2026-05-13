@@ -193,6 +193,10 @@ onUnmounted(() => {
             <span class="info-key">手机号</span>
             <span class="info-val">{{ detail.client_phone || '-' }}</span>
           </div>
+          <div class="info-row">
+            <span class="info-key">结算方式</span>
+            <span class="info-val">{{ detail.settlement_method_str || '-' }}</span>
+          </div>
         </div>
       </div>
 

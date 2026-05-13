@@ -286,7 +286,7 @@ const onSubmit = async () => {
   try {
     await createOrder(orderCreateStore.buildCreatePayload(), { loading: false })
     showToast('订单创建成功')
-    orderCreateStore.resetDraft()
+    orderCreateStore.resetDraft({ preservePreferences: true })
     const hasBack = Boolean(window.history.state?.back)
     if (hasBack) {
       router.back()
